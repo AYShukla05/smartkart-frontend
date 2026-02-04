@@ -1,0 +1,269 @@
+<div
+  class="min-h-screen flex items-center justify-center"
+  style="background: var(--color-bg-secondary)"
+>
+  <div
+    class="w-full max-w-md p-8"
+    style="
+      background: var(--color-bg);
+      border-radius: var(--radius-xl);
+      box-shadow: var(--shadow-lg);
+    "
+  >
+    <!-- Logo -->
+    <div class="text-center mb-6">
+      <a
+        routerLink="/"
+        class="text-2xl font-bold"
+        style="color: var(--color-primary)"
+      >
+        SmartKart
+      </a>
+    </div>
+
+    <!-- Header -->
+    <div class="text-center mb-8">
+      <h1
+        class="text-xl font-bold"
+        style="color: var(--color-text); font-family: var(--font-sans)"
+      >
+        Create an account
+      </h1>
+      <p class="mt-2" style="color: var(--color-text-secondary)">
+        Join SmartKart as a buyer or seller
+      </p>
+    </div>
+
+    <!-- Error Message -->
+    @if (errorMessage()) {
+    <div
+      class="mb-6 p-4"
+      style="
+        background: var(--color-danger-light);
+        border-radius: var(--radius-md);
+        color: var(--color-danger);
+      "
+    >
+      {{ errorMessage() }}
+    </div>
+    }
+
+    <!-- Form -->
+    <form [formGroup]="registerForm" (ngSubmit)="onSubmit()" class="space-y-6">
+      <!-- Email -->
+      <div>
+        <label
+          for="email"
+          class="block text-sm font-medium mb-2"
+          style="color: var(--color-text)"
+        >
+          Email
+        </label>
+        <input
+          type="email"
+          id="email"
+          formControlName="email"
+          class="w-full px-4 py-3 transition-all focus:ring-2 focus:ring-offset-1"
+          style="
+            border: 1px solid var(--color-border);
+            border-radius: var(--radius-md);
+            font-family: var(--font-sans);
+            font-size: var(--text-base);
+            outline: none;
+            --tw-ring-color: var(--color-primary);
+          "
+          [style.border-color]="
+            email?.invalid && email?.touched
+              ? 'var(--color-danger)'
+              : 'var(--color-border)'
+          "
+          placeholder="you@example.com"
+        />
+        @if (email?.invalid && email?.touched) {
+        <p class="mt-1 text-sm" style="color: var(--color-danger)">
+          @if (email?.errors?.['required']) { Email is required } @else if
+          (email?.errors?.['email']) { Please enter a valid email }
+        </p>
+        }
+      </div>
+
+      <!-- Password -->
+      <div>
+        <label
+          for="password"
+          class="block text-sm font-medium mb-2"
+          style="color: var(--color-text)"
+        >
+          Password
+        </label>
+        <input
+          type="password"
+          id="password"
+          formControlName="password"
+          class="w-full px-4 py-3 transition-all focus:ring-2 focus:ring-offset-1"
+          style="
+            border: 1px solid var(--color-border);
+            border-radius: var(--radius-md);
+            font-family: var(--font-sans);
+            font-size: var(--text-base);
+            outline: none;
+            --tw-ring-color: var(--color-primary);
+          "
+          [style.border-color]="
+            password?.invalid && password?.touched
+              ? 'var(--color-danger)'
+              : 'var(--color-border)'
+          "
+          placeholder="At least 8 characters"
+        />
+        @if (password?.invalid && password?.touched) {
+        <p class="mt-1 text-sm" style="color: var(--color-danger)">
+          @if (password?.errors?.['required']) { Password is required } @else if
+          (password?.errors?.['minlength']) { Password must be at least 8
+          characters }
+        </p>
+        }
+      </div>
+
+      <!-- Role Selection -->
+      <div>
+        <label
+          class="block text-sm font-medium mb-3"
+          style="color: var(--color-text)"
+        >
+          I want to
+        </label>
+        <div class="grid grid-cols-2 gap-4">
+          <!-- Buyer Option -->
+          <label
+            class="relative flex flex-col items-center p-4 cursor-pointer transition-all"
+            [style.border]="
+              role?.value === 'BUYER'
+                ? '2px solid var(--color-primary)'
+                : '1px solid var(--color-border)'
+            "
+            [style.background]="
+              role?.value === 'BUYER'
+                ? 'var(--color-primary-light)'
+                : 'var(--color-bg)'
+            "
+            style="border-radius: var(--radius-lg)"
+          >
+            <input
+              type="radio"
+              formControlName="role"
+              value="BUYER"
+              class="sr-only"
+            />
+            <svg
+              class="w-8 h-8 mb-2"
+              [style.color]="
+                role?.value === 'BUYER'
+                  ? 'var(--color-primary)'
+                  : 'var(--color-text-muted)'
+              "
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"
+              />
+            </svg>
+            <span
+              class="font-medium"
+              [style.color]="
+                role?.value === 'BUYER'
+                  ? 'var(--color-primary)'
+                  : 'var(--color-text)'
+              "
+            >
+              Buy products
+            </span>
+          </label>
+
+          <!-- Seller Option -->
+          <label
+            class="relative flex flex-col items-center p-4 cursor-pointer transition-all"
+            [style.border]="
+              role?.value === 'SELLER'
+                ? '2px solid var(--color-primary)'
+                : '1px solid var(--color-border)'
+            "
+            [style.background]="
+              role?.value === 'SELLER'
+                ? 'var(--color-primary-light)'
+                : 'var(--color-bg)'
+            "
+            style="border-radius: var(--radius-lg)"
+          >
+            <input
+              type="radio"
+              formControlName="role"
+              value="SELLER"
+              class="sr-only"
+            />
+            <svg
+              class="w-8 h-8 mb-2"
+              [style.color]="
+                role?.value === 'SELLER'
+                  ? 'var(--color-primary)'
+                  : 'var(--color-text-muted)'
+              "
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"
+              />
+            </svg>
+            <span
+              class="font-medium"
+              [style.color]="
+                role?.value === 'SELLER'
+                  ? 'var(--color-primary)'
+                  : 'var(--color-text)'
+              "
+            >
+              Sell products
+            </span>
+          </label>
+        </div>
+      </div>
+
+      <!-- Submit Button -->
+      <button
+        type="submit"
+        [disabled]="isSubmitting()"
+        class="w-full py-3 font-medium transition-all cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed hover:opacity-90 active:scale-[0.98]"
+        style="
+          background: var(--color-primary);
+          color: var(--color-text-inverse);
+          border-radius: var(--radius-md);
+          font-family: var(--font-sans);
+        "
+      >
+        @if (isSubmitting()) { Creating account... } @else { Create account }
+      </button>
+    </form>
+
+    <!-- Login Link -->
+    <p class="mt-6 text-center" style="color: var(--color-text-secondary)">
+      Already have an account?
+      <a
+        routerLink="/login"
+        class="font-medium hover:underline"
+        style="color: var(--color-primary)"
+      >
+        Sign in
+      </a>
+    </p>
+  </div>
+</div>
