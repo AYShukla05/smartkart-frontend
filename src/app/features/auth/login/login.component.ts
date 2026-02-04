@@ -39,7 +39,9 @@ export class LoginComponent {
 
     this.authService.login(this.loginForm.getRawValue()).subscribe({
       next: (user) => {
-        if (user.role === "SELLER") {
+        if (user.is_staff) {
+          this.router.navigate(["/admin"]);
+        } else if (user.role === "SELLER") {
           this.router.navigate(["/seller"]);
         } else {
           this.router.navigate(["/"]);

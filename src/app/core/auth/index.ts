@@ -1,6 +1,6 @@
 export { AuthService } from "./auth.service";
 export { authInterceptor } from "./auth.interceptor";
-export { guestGuard, buyerGuard, sellerGuard } from "./auth.guard";
+export { guestGuard, buyerGuard, sellerGuard, adminGuard } from "./auth.guard";
 export type {
   User,
   LoginRequest,

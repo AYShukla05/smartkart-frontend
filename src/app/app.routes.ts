@@ -1,5 +1,5 @@
 import { Routes } from "@angular/router";
-import { guestGuard, buyerGuard, sellerGuard } from "./core";
+import { guestGuard, sellerGuard, adminGuard } from "./core";
 
 export const routes: Routes = [
   // Auth routes (guest only)
@@ -50,6 +50,30 @@ export const routes: Routes = [
         loadComponent: () =>
           import("./features/seller/dashboard/dashboard.component").then(
             (m) => m.SellerDashboardComponent
+          ),
+      },
+    ],
+  },
+
+  // Admin routes (is_staff only)
+  {
+    path: "admin",
+    canActivate: [adminGuard],
+    loadComponent: () =>
+      import("./layouts/main-layout/main-layout.component").then(
+        (m) => m.MainLayoutComponent
+      ),
+    children: [
+      {
+        path: "",
+        redirectTo: "categories",
+        pathMatch: "full",
+      },
+      {
+        path: "categories",
+        loadComponent: () =>
+          import("./features/admin/categories/category-list.component").then(
+            (m) => m.CategoryListComponent
           ),
       },
     ],
