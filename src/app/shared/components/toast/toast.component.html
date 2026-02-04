@@ -1,0 +1,44 @@
+<div class="fixed bottom-4 right-4 z-50 flex flex-col gap-2" role="status" aria-live="polite">
+  @for (toast of toastService.toasts(); track toast.id) {
+  <div
+    class="px-4 py-3 rounded-lg shadow-lg flex items-center gap-3 min-w-72 animate-slide-in"
+    [style.background]="
+      toast.type === 'success'
+        ? 'var(--color-success)'
+        : toast.type === 'error'
+          ? 'var(--color-danger)'
+          : 'var(--color-primary)'
+    "
+    style="color: white"
+  >
+    <!-- Icon -->
+    @if (toast.type === 'success') {
+    <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+    </svg>
+    } @else if (toast.type === 'error') {
+    <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+    </svg>
+    } @else {
+    <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+    </svg>
+    }
+
+    <!-- Message -->
+    <span class="flex-1 text-sm font-medium">{{ toast.message }}</span>
+
+    <!-- Dismiss -->
+    <button
+      (click)="toastService.dismiss(toast.id)"
+      class="flex-shrink-0 opacity-70 hover:opacity-100 transition-opacity cursor-pointer"
+      aria-label="Dismiss"
+    >
+      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+      </svg>
+    </button>
+  </div>
+  }
+</div>

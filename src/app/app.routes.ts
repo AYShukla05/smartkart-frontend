@@ -1,9 +1,11 @@
 import { Routes } from "@angular/router";
+import { guestGuard, buyerGuard, sellerGuard } from "./core";
 
 export const routes: Routes = [
-  // Auth routes (login, register)
+  // Auth routes (guest only)
   {
     path: "login",
+    canActivate: [guestGuard],
     loadComponent: () =>
       import("./features/auth/login/login.component").then(
         (m) => m.LoginComponent
@@ -11,22 +13,54 @@ export const routes: Routes = [
   },
   {
     path: "register",
+    canActivate: [guestGuard],
     loadComponent: () =>
       import("./features/auth/register/register.component").then(
         (m) => m.RegisterComponent
       ),
   },
 
-  // Default redirect (temporary until home page is created)
+  // Public home (no auth required)
   {
     path: "",
-    redirectTo: "/login",
-    pathMatch: "full",
+    loadComponent: () =>
+      import("./layouts/main-layout/main-layout.component").then(
+        (m) => m.MainLayoutComponent
+      ),
+    children: [
+      {
+        path: "",
+        loadComponent: () =>
+          import("./features/home/home.component").then((m) => m.HomeComponent),
+      },
+    ],
   },
 
-  // Wildcard - redirect to home
+  // Seller routes (seller only)
   {
-    path: "**",
-    redirectTo: "/login",
+    path: "seller",
+    canActivate: [sellerGuard],
+    loadComponent: () =>
+      import("./layouts/main-layout/main-layout.component").then(
+        (m) => m.MainLayoutComponent
+      ),
+    children: [
+      {
+        path: "",
+        loadComponent: () =>
+          import("./features/seller/dashboard/dashboard.component").then(
+            (m) => m.SellerDashboardComponent
+          ),
+      },
+    ],
   },
+
+  {
+    path: "not-found",
+    loadComponent: () =>
+      import("./features/not-found/not-found.component").then(
+        (m) => m.NotFoundComponent
+      ),
+  },
+  { path: "**", redirectTo: "/not-found" },
 ];
