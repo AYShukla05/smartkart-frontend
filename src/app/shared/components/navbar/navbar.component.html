@@ -36,6 +36,15 @@
       Dashboard
     </a>
     }
+    @if (auth.isAdmin()) {
+    <a
+      routerLink="/admin"
+      routerLinkActive="active"
+      class="nav-link"
+    >
+      Admin
+    </a>
+    }
   </div>
 
   <!-- Desktop User Menu -->
@@ -44,6 +53,14 @@
     <span class="text-sm" style="color: var(--color-text-secondary)">
       {{ auth.user()?.email }}
     </span>
+    @if (auth.isAdmin()) {
+    <span
+      class="px-2 py-1 text-xs font-medium rounded"
+      style="background: var(--color-danger-light); color: var(--color-danger)"
+    >
+      ADMIN
+    </span>
+    }
     @if (auth.userRole()) {
     <span
       class="px-2 py-1 text-xs font-medium rounded"
@@ -133,6 +150,11 @@
     @if (auth.isSeller()) {
     <a routerLink="/seller" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }" class="mobile-nav-link">
       Dashboard
+    </a>
+    }
+    @if (auth.isAdmin()) {
+    <a routerLink="/admin" routerLinkActive="active" class="mobile-nav-link">
+      Admin
     </a>
     }
   </div>

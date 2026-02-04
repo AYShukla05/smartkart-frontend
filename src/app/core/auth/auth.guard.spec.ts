@@ -2,7 +2,7 @@ import { TestBed, fakeAsync, tick } from "@angular/core/testing";
 import { Router, ActivatedRouteSnapshot, RouterStateSnapshot } from "@angular/router";
 import { signal, computed } from "@angular/core";
 import { Observable } from "rxjs";
-import { guestGuard, buyerGuard, sellerGuard } from "./auth.guard";
+import { guestGuard, buyerGuard, sellerGuard, adminGuard } from "./auth.guard";
 import { AuthService } from "./auth.service";
 
 describe("Auth Guards", () => {

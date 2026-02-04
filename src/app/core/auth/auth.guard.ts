@@ -74,3 +74,26 @@ export const sellerGuard: CanActivateFn = () => {
     })
   );
 };
+
+/** Restricts access to admin users (is_staff=true) */
+export const adminGuard: CanActivateFn = () => {
+  const authService = inject(AuthService);
+  const router = inject(Router);
+
+  if (!authService.hasValidToken()) {
+    router.navigate(["/login"]);
+    return false;
+  }
+
+  return toObservable(authService.isInitialized).pipe(
+    filter(Boolean),
+    take(1),
+    map(() => {
+      if (authService.isAdmin()) {
+        return true;
+      }
+      router.navigate(["/"]);
+      return false;
+    })
+  );
+};
