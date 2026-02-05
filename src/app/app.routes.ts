@@ -52,6 +52,27 @@ export const routes: Routes = [
             (m) => m.SellerDashboardComponent
           ),
       },
+      {
+        path: "products",
+        loadComponent: () =>
+          import(
+            "./features/seller/products/product-list/product-list.component"
+          ).then((m) => m.ProductListComponent),
+      },
+      {
+        path: "products/new",
+        loadComponent: () =>
+          import(
+            "./features/seller/products/product-form/product-form.component"
+          ).then((m) => m.ProductFormComponent),
+      },
+      {
+        path: "products/:id/edit",
+        loadComponent: () =>
+          import(
+            "./features/seller/products/product-form/product-form.component"
+          ).then((m) => m.ProductFormComponent),
+      },
     ],
   },
 

@@ -35,6 +35,13 @@
     >
       Dashboard
     </a>
+    <a
+      routerLink="/seller/products"
+      routerLinkActive="active"
+      class="nav-link"
+    >
+      Products
+    </a>
     }
     @if (auth.isAdmin()) {
     <a
@@ -150,6 +157,9 @@
     @if (auth.isSeller()) {
     <a routerLink="/seller" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }" class="mobile-nav-link">
       Dashboard
+    </a>
+    <a routerLink="/seller/products" routerLinkActive="active" class="mobile-nav-link">
+      Products
     </a>
     }
     @if (auth.isAdmin()) {
