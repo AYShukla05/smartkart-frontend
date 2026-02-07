@@ -6,14 +6,22 @@ import {
   Validators,
 } from "@angular/forms";
 import { ActivatedRoute, Router, RouterLink } from "@angular/router";
-import { ProductService } from "../../../../core";
-import { CategoryService, Category } from "../../../../core";
-import { ToastService } from "../../../../shared";
+import { firstValueFrom } from "rxjs";
+import {
+  ProductService,
+  CategoryService,
+  Category,
+  ProductImage,
+  convertToWebp,
+  isValidImageType,
+  isValidFileSize,
+} from "../../../../core";
+import { ToastService, ConfirmModalComponent } from "../../../../shared";
 
 @Component({
   selector: "app-product-form",
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, RouterLink],
+  imports: [CommonModule, ReactiveFormsModule, RouterLink, ConfirmModalComponent],
   templateUrl: "./product-form.component.html",
   styleUrl: "./product-form.component.scss",
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -36,6 +44,16 @@ export class ProductFormComponent implements OnInit {
   readonly pageTitle = computed(() =>
     this.isEditMode() ? "Edit Product" : "Add New Product"
   );
+
+  // Image management
+  readonly images = signal<ProductImage[]>([]);
+  readonly pendingFiles = signal<File[]>([]);
+  readonly pendingPreviews = signal<{ name: string; url: string }[]>([]);
+  readonly isUploading = signal(false);
+  readonly uploadProgress = signal<string | null>(null);
+  readonly deleteModalOpen = signal(false);
+  readonly deletingImageId = signal<number | null>(null);
+  readonly isDeletingImage = signal(false);
 
   readonly productForm = this.fb.group({
     name: ["", [Validators.required, Validators.maxLength(255)]],
@@ -78,6 +96,7 @@ export class ProductFormComponent implements OnInit {
           category: product.category,
           is_active: product.is_active,
         });
+        this.images.set(product.images);
         this.isLoading.set(false);
       },
       error: () => {
@@ -104,7 +123,14 @@ export class ProductFormComponent implements OnInit {
       : this.productService.create(data);
 
     request.subscribe({
-      next: () => {
+      next: async (result) => {
+        const pending = this.pendingFiles();
+        if (!editId && pending.length > 0 && result?.id) {
+          this.pendingPreviews().forEach((p) => URL.revokeObjectURL(p.url));
+          this.pendingFiles.set([]);
+          this.pendingPreviews.set([]);
+          await this.uploadFiles(result.id, pending);
+        }
         this.toast.success(editId ? "Product updated" : "Product created");
         this.router.navigate(["/seller/products"]);
       },
@@ -139,5 +165,142 @@ export class ProductFormComponent implements OnInit {
 
   get category() {
     return this.productForm.get("category");
+  }
+
+  // --- Image management ---
+
+  onFilesSelected(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    const files = input.files;
+    if (!files || files.length === 0) return;
+
+    const validFiles: File[] = [];
+    for (let i = 0; i < files.length; i++) {
+      const file = files[i];
+      if (!isValidImageType(file)) {
+        this.toast.error(`"${file.name}" is not a supported format. Use JPG or PNG.`);
+        continue;
+      }
+      if (!isValidFileSize(file)) {
+        this.toast.error(`"${file.name}" exceeds 10 MB limit.`);
+        continue;
+      }
+      validFiles.push(file);
+    }
+
+    if (validFiles.length === 0) {
+      input.value = "";
+      return;
+    }
+
+    const productId = this.editId();
+    if (productId) {
+      this.uploadFiles(productId, validFiles);
+    } else {
+      this.queueFiles(validFiles);
+    }
+    input.value = "";
+  }
+
+  private queueFiles(files: File[]): void {
+    this.pendingFiles.update((prev) => [...prev, ...files]);
+    const newPreviews = files.map((f) => ({
+      name: f.name,
+      url: URL.createObjectURL(f),
+    }));
+    this.pendingPreviews.update((prev) => [...prev, ...newPreviews]);
+  }
+
+  removePendingFile(index: number): void {
+    const previews = this.pendingPreviews();
+    URL.revokeObjectURL(previews[index].url);
+    this.pendingFiles.update((prev) => prev.filter((_, i) => i !== index));
+    this.pendingPreviews.update((prev) => prev.filter((_, i) => i !== index));
+  }
+
+  private async uploadFiles(productId: number, files: File[]): Promise<void> {
+    this.isUploading.set(true);
+    this.uploadProgress.set(
+      `Uploading ${files.length} ${files.length === 1 ? "image" : "images"}...`
+    );
+
+    const results = await Promise.allSettled(
+      files.map(async (file) => {
+        const webpBlob = await convertToWebp(file);
+        const presignResponse = await firstValueFrom(
+          this.productService.getPresignedUrl(productId, file.name)
+        );
+        await firstValueFrom(
+          this.productService.uploadToS3(presignResponse.upload_url, webpBlob)
+        );
+        return firstValueFrom(
+          this.productService.saveImageUrl(productId, presignResponse.file_url)
+        );
+      })
+    );
+
+    let successCount = 0;
+    for (let i = 0; i < results.length; i++) {
+      const result = results[i];
+      if (result.status === "fulfilled") {
+        this.images.update((imgs) => [...imgs, result.value]);
+        successCount++;
+      } else {
+        this.toast.error(`Failed to upload "${files[i].name}"`);
+      }
+    }
+
+    this.isUploading.set(false);
+    this.uploadProgress.set(null);
+    if (successCount > 0) {
+      this.toast.success(
+        `${successCount} ${successCount === 1 ? "image" : "images"} uploaded`
+      );
+    }
+  }
+
+  setThumbnail(imageId: number): void {
+    const productId = this.editId();
+    if (!productId) return;
+
+    this.productService.setThumbnail(productId, imageId).subscribe({
+      next: () => {
+        this.images.update((imgs) =>
+          imgs.map((img) => ({ ...img, is_thumbnail: img.id === imageId }))
+        );
+        this.toast.success("Thumbnail updated");
+      },
+      error: () => this.toast.error("Failed to set thumbnail"),
+    });
+  }
+
+  confirmDeleteImage(imageId: number): void {
+    this.deletingImageId.set(imageId);
+    this.deleteModalOpen.set(true);
+  }
+
+  cancelDeleteImage(): void {
+    this.deleteModalOpen.set(false);
+    this.deletingImageId.set(null);
+  }
+
+  executeDeleteImage(): void {
+    const imageId = this.deletingImageId();
+    const productId = this.editId();
+    if (!imageId || !productId) return;
+
+    this.isDeletingImage.set(true);
+    this.productService.deleteImage(productId, imageId).subscribe({
+      next: () => {
+        this.images.update((imgs) => imgs.filter((img) => img.id !== imageId));
+        this.toast.success("Image deleted");
+        this.cancelDeleteImage();
+        this.isDeletingImage.set(false);
+      },
+      error: () => {
+        this.toast.error("Failed to delete image");
+        this.isDeletingImage.set(false);
+      },
+    });
   }
 }
