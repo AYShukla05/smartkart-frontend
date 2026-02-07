@@ -158,19 +158,86 @@
         </div>
         }
 
-        <!-- Add to Cart -->
+        <!-- Cart Actions -->
+        @if (!isInStock()) {
         <button
-          (click)="addToCart()"
-          [disabled]="!isInStock()"
-          class="w-full mt-8 py-3 font-medium text-lg transition-all cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+          disabled
+          class="w-full mt-8 py-3 font-medium text-lg opacity-50 cursor-not-allowed"
           style="
             background: var(--color-primary);
             color: var(--color-text-inverse);
             border-radius: var(--radius-md);
           "
         >
-          @if (isInStock()) { Add to Cart } @else { Out of Stock }
+          Out of Stock
         </button>
+        } @else if (cartItem()) {
+        <div class="mt-8 space-y-3">
+          <div
+            class="flex items-center justify-between p-3"
+            style="
+              border: 1px solid var(--color-border);
+              border-radius: var(--radius-md);
+            "
+          >
+            <button
+              (click)="decrementCart()"
+              class="flex items-center justify-center w-10 h-10 cursor-pointer transition-all hover:opacity-80"
+              style="
+                border: 1px solid var(--color-border);
+                border-radius: var(--radius-md);
+                background: var(--color-bg);
+                color: var(--color-text);
+              "
+            >
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 12H4" />
+              </svg>
+            </button>
+            <span class="text-lg font-medium" style="color: var(--color-text)">
+              {{ cartItem()!.quantity }} in cart
+            </span>
+            <button
+              (click)="incrementCart()"
+              class="flex items-center justify-center w-10 h-10 cursor-pointer transition-all hover:opacity-80"
+              style="
+                border: 1px solid var(--color-border);
+                border-radius: var(--radius-md);
+                background: var(--color-bg);
+                color: var(--color-text);
+              "
+            >
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+              </svg>
+            </button>
+          </div>
+          <button
+            (click)="removeFromCart()"
+            class="w-full py-2.5 text-sm font-medium transition-all cursor-pointer hover:opacity-80"
+            style="
+              border: 1px solid var(--color-danger);
+              color: var(--color-danger);
+              background: transparent;
+              border-radius: var(--radius-md);
+            "
+          >
+            Remove from Cart
+          </button>
+        </div>
+        } @else {
+        <button
+          (click)="addToCart()"
+          class="w-full mt-8 py-3 font-medium text-lg transition-all cursor-pointer hover:opacity-90"
+          style="
+            background: var(--color-primary);
+            color: var(--color-text-inverse);
+            border-radius: var(--radius-md);
+          "
+        >
+          Add to Cart
+        </button>
+        }
       </div>
     </div>
     }
