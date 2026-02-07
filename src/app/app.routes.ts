@@ -33,6 +33,20 @@ export const routes: Routes = [
         loadComponent: () =>
           import("./features/home/home.component").then((m) => m.HomeComponent),
       },
+      {
+        path: "products",
+        loadComponent: () =>
+          import(
+            "./features/products/product-list/product-list.component"
+          ).then((m) => m.PublicProductListComponent),
+      },
+      {
+        path: "products/:id",
+        loadComponent: () =>
+          import(
+            "./features/products/product-detail/product-detail.component"
+          ).then((m) => m.PublicProductDetailComponent),
+      },
     ],
   },
 

@@ -26,6 +26,13 @@
     >
       Home
     </a>
+    <a
+      routerLink="/products"
+      routerLinkActive="active"
+      class="nav-link"
+    >
+      Shop
+    </a>
     @if (auth.isSeller()) {
     <a
       routerLink="/seller"
@@ -153,6 +160,9 @@
   <div class="flex flex-col gap-1">
     <a routerLink="/" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }" class="mobile-nav-link">
       Home
+    </a>
+    <a routerLink="/products" routerLinkActive="active" class="mobile-nav-link">
+      Shop
     </a>
     @if (auth.isSeller()) {
     <a routerLink="/seller" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }" class="mobile-nav-link">

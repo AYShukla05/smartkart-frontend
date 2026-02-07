@@ -8,6 +8,7 @@ export interface Product {
   category: number;
   category_name: string;
   seller_id: number;
+  seller_username: string | null;
   thumbnail: string | null;
 }
 
@@ -28,6 +29,7 @@ export interface ProductDetail {
   category_name: string;
   is_active: boolean;
   seller_id: number;
+  seller_username: string | null;
   images: ProductImage[];
   created_at: string;
   updated_at: string;
