@@ -1,5 +1,5 @@
 import { Routes } from "@angular/router";
-import { guestGuard, sellerGuard, adminGuard } from "./core";
+import { guestGuard, buyerGuard, sellerGuard, adminGuard } from "./core";
 
 export const routes: Routes = [
   // Auth routes (guest only)
@@ -46,6 +46,14 @@ export const routes: Routes = [
           import(
             "./features/products/product-detail/product-detail.component"
           ).then((m) => m.PublicProductDetailComponent),
+      },
+      {
+        path: "cart",
+        canActivate: [buyerGuard],
+        loadComponent: () =>
+          import("./features/cart/cart-page/cart-page.component").then(
+            (m) => m.CartPageComponent
+          ),
       },
     ],
   },

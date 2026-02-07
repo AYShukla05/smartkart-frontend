@@ -1,9 +1,9 @@
-import { Component, ChangeDetectionStrategy, inject, signal, DestroyRef } from "@angular/core";
+import { Component, ChangeDetectionStrategy, inject, signal, effect, DestroyRef } from "@angular/core";
 import { takeUntilDestroyed } from "@angular/core/rxjs-interop";
 import { CommonModule } from "@angular/common";
 import { Router, RouterLink, RouterLinkActive, NavigationEnd } from "@angular/router";
 import { filter } from "rxjs";
-import { AuthService } from "../../../core";
+import { AuthService, CartService } from "../../../core";
 
 @Component({
   selector: "app-navbar",
@@ -15,12 +15,19 @@ import { AuthService } from "../../../core";
 })
 export class NavbarComponent {
   readonly auth = inject(AuthService);
+  readonly cart = inject(CartService);
   private readonly router = inject(Router);
   private readonly destroyRef = inject(DestroyRef);
 
   readonly mobileMenuOpen = signal(false);
 
   constructor() {
+    effect(() => {
+      if (this.auth.isBuyer() && !this.cart.isLoaded()) {
+        this.cart.loadCart();
+      }
+    });
+
     this.router.events
       .pipe(
         filter((e) => e instanceof NavigationEnd),
@@ -34,6 +41,7 @@ export class NavbarComponent {
   }
 
   logout(): void {
+    this.cart.clearLocal();
     this.auth.logout();
   }
 }
