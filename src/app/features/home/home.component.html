@@ -1,17 +1,121 @@
 <div class="p-6">
-  <div
-    class="max-w-4xl mx-auto p-8 text-center"
-    style="
-      background: var(--color-bg);
-      border-radius: var(--radius-xl);
-      box-shadow: var(--shadow-md);
-    "
-  >
-    <h1 class="text-2xl font-bold mb-2" style="color: var(--color-text)">
-      Welcome to SmartKart
-    </h1>
-    <p style="color: var(--color-text-secondary)">
-      Browse products and start shopping
-    </p>
+  <div class="max-w-5xl mx-auto">
+    <!-- Hero Section -->
+    <div
+      class="p-8 text-center"
+      style="
+        background: var(--color-bg);
+        border-radius: var(--radius-xl);
+        box-shadow: var(--shadow-md);
+      "
+    >
+      <h1 class="text-3xl font-bold mb-2" style="color: var(--color-text)">
+        Welcome to SmartKart
+      </h1>
+      <p class="text-lg mb-6" style="color: var(--color-text-secondary)">
+        Browse products from our sellers and start shopping
+      </p>
+      <a
+        routerLink="/products"
+        class="inline-block px-6 py-3 font-medium text-lg transition-all hover:opacity-90"
+        style="
+          background: var(--color-primary);
+          color: var(--color-text-inverse);
+          border-radius: var(--radius-md);
+        "
+      >
+        Browse Products
+      </a>
+    </div>
+
+    <!-- Featured Products -->
+    @if (!isLoading() && featuredProducts().length > 0) {
+    <div class="mt-10">
+      <div class="flex items-center justify-between mb-6">
+        <h2 class="text-xl font-bold" style="color: var(--color-text)">
+          Featured Products
+        </h2>
+        <a
+          routerLink="/products"
+          class="text-sm font-medium transition-all hover:opacity-80"
+          style="color: var(--color-primary)"
+        >
+          View All &rarr;
+        </a>
+      </div>
+
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+        @for (product of featuredProducts(); track product.id) {
+        <a
+          [routerLink]="['/products', product.id]"
+          class="block overflow-hidden transition-all hover:-translate-y-1"
+          style="
+            background: var(--color-bg);
+            border-radius: var(--radius-lg);
+            box-shadow: var(--shadow-sm);
+          "
+        >
+          <!-- Image -->
+          <div
+            class="flex items-center justify-center"
+            style="
+              aspect-ratio: 4/3;
+              background: var(--color-bg-secondary);
+            "
+          >
+            @if (product.thumbnail) {
+            <img
+              [src]="product.thumbnail"
+              [alt]="product.name"
+              loading="lazy"
+              class="w-full h-full object-cover"
+            />
+            } @else {
+            <svg
+              class="w-12 h-12"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+              style="color: var(--color-text-muted)"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="1.5"
+                d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"
+              />
+            </svg>
+            }
+          </div>
+
+          <!-- Card Body -->
+          <div class="p-4">
+            <span
+              class="inline-block px-2 py-0.5 text-xs font-medium rounded-full mb-2"
+              style="
+                background: var(--color-primary-light);
+                color: var(--color-primary);
+              "
+            >
+              {{ product.category_name }}
+            </span>
+            <h3
+              class="font-medium truncate"
+              style="color: var(--color-text)"
+            >
+              {{ product.name }}
+            </h3>
+            <p
+              class="text-lg font-bold mt-1"
+              style="color: var(--color-primary)"
+            >
+              {{ product.price | currency }}
+            </p>
+          </div>
+        </a>
+        }
+      </div>
+    </div>
+    }
   </div>
 </div>
