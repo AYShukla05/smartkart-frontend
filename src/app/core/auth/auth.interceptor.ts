@@ -15,6 +15,7 @@ import {
   Observable,
 } from "rxjs";
 import { AuthService } from "./auth.service";
+import { environment } from "../../../environments/environment";
 
 let isRefreshing = false;
 const refreshTokenSubject = new BehaviorSubject<string | null>(null);
@@ -24,7 +25,7 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
   const accessToken = authService.getAccessToken();
 
   let authReq = req;
-  if (accessToken) {
+  if (accessToken && req.url.startsWith(environment.apiUrl)) {
     authReq = req.clone({
       setHeaders: {
         Authorization: `Bearer ${accessToken}`,
