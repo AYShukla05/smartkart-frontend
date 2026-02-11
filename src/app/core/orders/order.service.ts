@@ -1,7 +1,7 @@
 import { inject, Injectable } from "@angular/core";
 import { Observable, map } from "rxjs";
 import { ApiService } from "../api/api.service";
-import { Order, CheckoutResponse } from "./order.models";
+import { Order, SellerOrder, CheckoutResponse } from "./order.models";
 
 @Injectable({
   providedIn: "root",
@@ -36,6 +36,20 @@ export class OrderService {
         orders.map((order) => ({
           ...order,
           total_amount: Number(order.total_amount),
+          items: order.items.map((item) => ({
+            ...item,
+            price_at_purchase: Number(item.price_at_purchase),
+          })),
+        }))
+      )
+    );
+  }
+
+  getSellerOrders(): Observable<SellerOrder[]> {
+    return this.api.get<SellerOrder[]>("/orders/seller/").pipe(
+      map((orders) =>
+        orders.map((order) => ({
+          ...order,
           items: order.items.map((item) => ({
             ...item,
             price_at_purchase: Number(item.price_at_purchase),

@@ -1,17 +1,235 @@
 <div class="p-6">
-  <div
-    class="max-w-4xl mx-auto p-8 text-center"
-    style="
-      background: var(--color-bg);
-      border-radius: var(--radius-xl);
-      box-shadow: var(--shadow-md);
-    "
-  >
-    <h1 class="text-2xl font-bold mb-2" style="color: var(--color-text)">
+  <div class="max-w-4xl mx-auto">
+    <h1 class="text-2xl font-bold mb-6" style="color: var(--color-text)">
       Seller Dashboard
     </h1>
-    <p style="color: var(--color-text-secondary)">
-      Manage your products and orders
-    </p>
+
+    @if (isLoading()) {
+    <!-- Loading -->
+    <div class="p-12 text-center" style="color: var(--color-text-secondary)">
+      <svg
+        class="w-6 h-6 animate-spin mx-auto mb-2"
+        fill="none"
+        viewBox="0 0 24 24"
+        style="color: var(--color-primary)"
+      >
+        <circle
+          class="opacity-25"
+          cx="12"
+          cy="12"
+          r="10"
+          stroke="currentColor"
+          stroke-width="4"
+        ></circle>
+        <path
+          class="opacity-75"
+          fill="currentColor"
+          d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+        ></path>
+      </svg>
+      Loading dashboard...
+    </div>
+    } @else {
+    <!-- Stat Cards -->
+    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
+      <!-- Products -->
+      <a
+        routerLink="/seller/products"
+        class="block p-6 transition-all hover:opacity-90"
+        style="
+          background: var(--color-bg);
+          border-radius: var(--radius-lg);
+          box-shadow: var(--shadow-sm);
+        "
+      >
+        <div class="flex items-center gap-3">
+          <div
+            class="w-10 h-10 flex items-center justify-center rounded-lg"
+            style="background: var(--color-primary-light)"
+          >
+            <svg
+              class="w-5 h-5"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+              style="color: var(--color-primary)"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"
+              />
+            </svg>
+          </div>
+          <div>
+            <p class="text-2xl font-bold" style="color: var(--color-text)">
+              {{ stats().totalProducts }}
+            </p>
+            <p class="text-xs" style="color: var(--color-text-secondary)">
+              Products
+            </p>
+          </div>
+        </div>
+      </a>
+
+      <!-- Orders -->
+      <a
+        routerLink="/seller/orders"
+        class="block p-6 transition-all hover:opacity-90"
+        style="
+          background: var(--color-bg);
+          border-radius: var(--radius-lg);
+          box-shadow: var(--shadow-sm);
+        "
+      >
+        <div class="flex items-center gap-3">
+          <div
+            class="w-10 h-10 flex items-center justify-center rounded-lg"
+            style="background: var(--color-success-light)"
+          >
+            <svg
+              class="w-5 h-5"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+              style="color: var(--color-success)"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"
+              />
+            </svg>
+          </div>
+          <div>
+            <p class="text-2xl font-bold" style="color: var(--color-text)">
+              {{ stats().totalOrders }}
+            </p>
+            <p class="text-xs" style="color: var(--color-text-secondary)">
+              Orders
+            </p>
+          </div>
+        </div>
+      </a>
+
+      <!-- Revenue -->
+      <div
+        class="p-6"
+        style="
+          background: var(--color-bg);
+          border-radius: var(--radius-lg);
+          box-shadow: var(--shadow-sm);
+        "
+      >
+        <div class="flex items-center gap-3">
+          <div
+            class="w-10 h-10 flex items-center justify-center rounded-lg"
+            style="background: var(--color-warning-light)"
+          >
+            <svg
+              class="w-5 h-5"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+              style="color: var(--color-warning)"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+              />
+            </svg>
+          </div>
+          <div>
+            <p class="text-2xl font-bold" style="color: var(--color-text)">
+              {{ stats().totalRevenue | currency }}
+            </p>
+            <p class="text-xs" style="color: var(--color-text-secondary)">
+              Revenue
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Recent Orders -->
+    <div
+      style="
+        background: var(--color-bg);
+        border-radius: var(--radius-lg);
+        box-shadow: var(--shadow-sm);
+      "
+    >
+      <div
+        class="flex items-center justify-between p-4"
+        style="border-bottom: 1px solid var(--color-border)"
+      >
+        <h2 class="font-bold" style="color: var(--color-text)">
+          Recent Orders
+        </h2>
+        @if (recentOrders().length > 0) {
+        <a
+          routerLink="/seller/orders"
+          class="text-sm font-medium transition-all hover:opacity-80"
+          style="color: var(--color-primary)"
+        >
+          View All
+        </a>
+        }
+      </div>
+
+      @if (recentOrders().length === 0) {
+      <div class="p-8 text-center">
+        <p class="text-sm" style="color: var(--color-text-secondary)">
+          No orders yet. Orders containing your products will appear here.
+        </p>
+      </div>
+      } @else { @for (order of recentOrders(); track order.id) {
+      <div
+        class="flex items-center justify-between p-4"
+        [style.border-bottom]="
+          !$last ? '1px solid var(--color-border)' : 'none'
+        "
+      >
+        <div>
+          <p class="text-sm font-medium" style="color: var(--color-text)">
+            Order #{{ order.id }}
+          </p>
+          <p class="text-xs mt-0.5" style="color: var(--color-text-secondary)">
+            {{ order.created_at | date : "MMM d, y" }} &middot;
+            {{ order.items.length }}
+            {{ order.items.length === 1 ? "item" : "items" }}
+          </p>
+        </div>
+        <div class="flex items-center gap-3">
+          <span
+            class="px-2 py-0.5 text-xs font-medium rounded-full"
+            [style.background]="
+              order.status === 'PLACED'
+                ? 'var(--color-success-light)'
+                : 'var(--color-danger-light)'
+            "
+            [style.color]="
+              order.status === 'PLACED'
+                ? 'var(--color-success)'
+                : 'var(--color-danger)'
+            "
+          >
+            {{ order.status }}
+          </span>
+          <span
+            class="text-sm font-bold"
+            style="color: var(--color-primary)"
+          >
+            {{ orderRevenue(order) | currency }}
+          </span>
+        </div>
+      </div>
+      } }
+    </div>
+    }
   </div>
 </div>
