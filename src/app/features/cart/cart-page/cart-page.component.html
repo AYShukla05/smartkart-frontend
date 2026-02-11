@@ -235,14 +235,15 @@
 
           <button
             (click)="checkout()"
-            class="w-full mt-6 py-3 font-medium transition-all hover:opacity-90 cursor-pointer"
+            [disabled]="checkingOut()"
+            class="w-full mt-6 py-3 font-medium transition-all hover:opacity-90 cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed"
             style="
               background: var(--color-primary);
               color: var(--color-text-inverse);
               border-radius: var(--radius-md);
             "
           >
-            Proceed to Checkout
+            {{ checkingOut() ? 'Placing Order...' : 'Proceed to Checkout' }}
           </button>
 
           <a
