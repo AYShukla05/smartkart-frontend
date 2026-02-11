@@ -1,0 +1,147 @@
+<div class="p-6">
+  <div class="max-w-4xl mx-auto">
+    <h1 class="text-2xl font-bold mb-6" style="color: var(--color-text)">
+      Orders
+    </h1>
+
+    @if (isLoading()) {
+    <!-- Loading -->
+    <div class="p-12 text-center" style="color: var(--color-text-secondary)">
+      <svg
+        class="w-6 h-6 animate-spin mx-auto mb-2"
+        fill="none"
+        viewBox="0 0 24 24"
+        style="color: var(--color-primary)"
+      >
+        <circle
+          class="opacity-25"
+          cx="12"
+          cy="12"
+          r="10"
+          stroke="currentColor"
+          stroke-width="4"
+        ></circle>
+        <path
+          class="opacity-75"
+          fill="currentColor"
+          d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+        ></path>
+      </svg>
+      Loading orders...
+    </div>
+    } @else if (orders().length === 0) {
+    <!-- Empty State -->
+    <div
+      class="p-12 text-center"
+      style="
+        background: var(--color-bg);
+        border-radius: var(--radius-lg);
+        box-shadow: var(--shadow-sm);
+      "
+    >
+      <svg
+        class="w-12 h-12 mx-auto mb-3"
+        fill="none"
+        stroke="currentColor"
+        viewBox="0 0 24 24"
+        style="color: var(--color-text-muted)"
+      >
+        <path
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          stroke-width="1.5"
+          d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"
+        />
+      </svg>
+      <p class="font-medium" style="color: var(--color-text)">
+        No orders yet
+      </p>
+      <p class="text-sm mt-1" style="color: var(--color-text-secondary)">
+        Orders containing your products will appear here
+      </p>
+    </div>
+    } @else {
+    <!-- Order List -->
+    <div class="space-y-4">
+      @for (order of orders(); track order.id) {
+      <div
+        style="
+          background: var(--color-bg);
+          border-radius: var(--radius-lg);
+          box-shadow: var(--shadow-sm);
+        "
+      >
+        <!-- Order Header -->
+        <div
+          class="flex items-center justify-between p-4"
+          style="border-bottom: 1px solid var(--color-border)"
+        >
+          <div>
+            <p class="font-bold" style="color: var(--color-text)">
+              Order #{{ order.id }}
+            </p>
+            <p
+              class="text-xs mt-0.5"
+              style="color: var(--color-text-secondary)"
+            >
+              {{ order.created_at | date : "MMM d, y 'at' h:mm a" }}
+            </p>
+          </div>
+          <div class="flex items-center gap-3">
+            <span
+              class="px-2.5 py-1 text-xs font-medium rounded-full"
+              [style.background]="
+                order.status === 'PLACED'
+                  ? 'var(--color-success-light)'
+                  : 'var(--color-danger-light)'
+              "
+              [style.color]="
+                order.status === 'PLACED'
+                  ? 'var(--color-success)'
+                  : 'var(--color-danger)'
+              "
+            >
+              {{ order.status }}
+            </span>
+            <span class="font-bold" style="color: var(--color-primary)">
+              {{ orderRevenue(order) | currency }}
+            </span>
+          </div>
+        </div>
+
+        <!-- Order Items -->
+        <div class="p-4">
+          @for (item of order.items; track item.id) {
+          <div
+            class="flex justify-between py-2"
+            [style.border-bottom]="
+              !$last ? '1px solid var(--color-border-light)' : 'none'
+            "
+          >
+            <div>
+              <p class="text-sm font-medium" style="color: var(--color-text)">
+                {{ item.product_name }}
+              </p>
+              <p
+                class="text-xs mt-0.5"
+                style="color: var(--color-text-secondary)"
+              >
+                Qty: {{ item.quantity }} &times;
+                {{ item.price_at_purchase | currency }}
+              </p>
+            </div>
+            <p
+              class="text-sm font-medium self-center"
+              style="color: var(--color-text)"
+            >
+              {{ item.price_at_purchase * item.quantity | currency }}
+            </p>
+          </div>
+          }
+        </div>
+      </div>
+      }
+    </div>
+    }
+  </div>
+</div>

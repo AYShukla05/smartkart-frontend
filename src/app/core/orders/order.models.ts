@@ -13,6 +13,13 @@ export interface Order {
   items: OrderItem[];
 }
 
+export interface SellerOrder {
+  id: number;
+  status: "PLACED" | "CANCELLED";
+  created_at: string;
+  items: OrderItem[];
+}
+
 export interface CheckoutResponse {
   order_id: number;
   total_amount: number;
