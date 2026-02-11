@@ -1,0 +1,110 @@
+<div class="p-6">
+  <div class="max-w-3xl mx-auto">
+    @if (isLoading()) {
+    <div class="p-12 text-center" style="color: var(--color-text-secondary)">
+      <svg
+        class="w-6 h-6 animate-spin mx-auto mb-2"
+        fill="none"
+        viewBox="0 0 24 24"
+        style="color: var(--color-primary)"
+        aria-hidden="true"
+      >
+        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+      </svg>
+      Loading order...
+    </div>
+    } @else if (error()) {
+    <div class="p-12 text-center">
+      <p class="font-medium" style="color: var(--color-text)">Order not found</p>
+      <a
+        routerLink="/orders"
+        class="inline-block mt-4 px-6 py-2 text-sm font-medium transition-all hover:opacity-80"
+        style="background: var(--color-primary); color: var(--color-text-inverse); border-radius: var(--radius-md)"
+      >
+        Back to Orders
+      </a>
+    </div>
+    } @else if (order(); as o) {
+    <!-- Back Link -->
+    <a
+      routerLink="/orders"
+      class="inline-flex items-center gap-1 text-sm font-medium mb-6 transition-all hover:opacity-80"
+      style="color: var(--color-primary)"
+    >
+      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+      </svg>
+      Back to Orders
+    </a>
+
+    <!-- Order Header -->
+    <div
+      class="p-6 mb-4"
+      style="background: var(--color-bg); border-radius: var(--radius-lg); box-shadow: var(--shadow-sm)"
+    >
+      <div class="flex items-center justify-between mb-4">
+        <h1 class="text-2xl font-bold" style="color: var(--color-text)">
+          Order #{{ o.id }}
+        </h1>
+        <span
+          class="px-3 py-1 text-sm font-medium rounded-full"
+          [style.background]="o.status === 'PLACED' ? 'var(--color-success-light)' : 'var(--color-danger-light)'"
+          [style.color]="o.status === 'PLACED' ? 'var(--color-success)' : 'var(--color-danger)'"
+        >
+          {{ o.status }}
+        </span>
+      </div>
+
+      <div class="flex gap-6 text-sm" style="color: var(--color-text-secondary)">
+        <div>
+          <span class="font-medium" style="color: var(--color-text)">Date:</span>
+          {{ o.created_at | date : "MMM d, y 'at' h:mm a" }}
+        </div>
+        <div>
+          <span class="font-medium" style="color: var(--color-text)">Total:</span>
+          <span style="color: var(--color-primary); font-weight: 700">
+            {{ o.total_amount | currency }}
+          </span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Order Items -->
+    <div
+      style="background: var(--color-bg); border-radius: var(--radius-lg); box-shadow: var(--shadow-sm)"
+    >
+      <h2 class="px-6 pt-6 pb-3 font-bold" style="color: var(--color-text)">
+        Items ({{ o.items.length }})
+      </h2>
+      @for (item of o.items; track item.id) {
+      <div
+        class="flex justify-between items-center px-6 py-4"
+        [style.border-top]="'1px solid var(--color-border)'"
+      >
+        <div>
+          <p class="font-medium" style="color: var(--color-text)">
+            {{ item.product_name }}
+          </p>
+          <p class="text-sm mt-0.5" style="color: var(--color-text-secondary)">
+            Qty: {{ item.quantity }} &times; {{ item.price_at_purchase | currency }}
+          </p>
+        </div>
+        <p class="font-medium" style="color: var(--color-text)">
+          {{ item.price_at_purchase * item.quantity | currency }}
+        </p>
+      </div>
+      }
+
+      <!-- Total Row -->
+      <div
+        class="flex justify-between items-center px-6 py-4 font-bold"
+        style="border-top: 2px solid var(--color-border)"
+      >
+        <span style="color: var(--color-text)">Total</span>
+        <span style="color: var(--color-primary)">{{ o.total_amount | currency }}</span>
+      </div>
+    </div>
+    }
+  </div>
+</div>

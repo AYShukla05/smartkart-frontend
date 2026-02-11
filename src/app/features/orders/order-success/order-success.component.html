@@ -1,0 +1,97 @@
+<div class="p-6">
+  <div class="max-w-lg mx-auto text-center">
+    <div
+      class="p-10"
+      style="
+        background: var(--color-bg);
+        border-radius: var(--radius-lg);
+        box-shadow: var(--shadow-sm);
+      "
+    >
+      <!-- Checkmark Icon -->
+      <div
+        class="w-16 h-16 mx-auto mb-4 flex items-center justify-center rounded-full"
+        style="background: var(--color-success-light)"
+      >
+        <svg
+          class="w-8 h-8"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+          style="color: var(--color-success)"
+        >
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            d="M5 13l4 4L19 7"
+          />
+        </svg>
+      </div>
+
+      <h1 class="text-2xl font-bold" style="color: var(--color-text)">
+        Order Placed Successfully!
+      </h1>
+
+      <p class="mt-2 text-sm" style="color: var(--color-text-secondary)">
+        Your order has been confirmed and is being processed.
+      </p>
+
+      @if (orderId) {
+      <div
+        class="mt-6 p-4"
+        style="
+          background: var(--color-bg-secondary);
+          border-radius: var(--radius-md);
+        "
+      >
+        <p class="text-sm" style="color: var(--color-text-secondary)">
+          Order ID
+        </p>
+        <p class="text-lg font-bold mt-0.5" style="color: var(--color-text)">
+          #{{ orderId }}
+        </p>
+        @if (totalAmount !== null) {
+        <p
+          class="text-sm mt-2"
+          style="color: var(--color-text-secondary)"
+        >
+          Total
+        </p>
+        <p
+          class="text-lg font-bold mt-0.5"
+          style="color: var(--color-primary)"
+        >
+          {{ totalAmount | currency }}
+        </p>
+        }
+      </div>
+      }
+
+      <div class="mt-8 flex flex-col gap-3">
+        <a
+          routerLink="/orders"
+          class="block w-full py-3 font-medium transition-all hover:opacity-90"
+          style="
+            background: var(--color-primary);
+            color: var(--color-text-inverse);
+            border-radius: var(--radius-md);
+          "
+        >
+          View My Orders
+        </a>
+        <a
+          routerLink="/products"
+          class="block w-full py-3 font-medium transition-all hover:opacity-80"
+          style="
+            color: var(--color-primary);
+            border: 1px solid var(--color-primary);
+            border-radius: var(--radius-md);
+          "
+        >
+          Continue Shopping
+        </a>
+      </div>
+    </div>
+  </div>
+</div>

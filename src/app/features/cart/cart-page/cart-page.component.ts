@@ -1,7 +1,7 @@
-import { Component, ChangeDetectionStrategy, inject, OnInit } from "@angular/core";
+import { Component, ChangeDetectionStrategy, inject, OnInit, signal } from "@angular/core";
 import { CommonModule } from "@angular/common";
-import { RouterLink } from "@angular/router";
-import { CartService, CartItem } from "../../../core";
+import { Router, RouterLink } from "@angular/router";
+import { CartService, CartItem, OrderService } from "../../../core";
 import { ToastService } from "../../../shared";
 
 @Component({
@@ -14,7 +14,10 @@ import { ToastService } from "../../../shared";
 })
 export class CartPageComponent implements OnInit {
   readonly cartService = inject(CartService);
+  private readonly orderService = inject(OrderService);
+  private readonly router = inject(Router);
   private readonly toast = inject(ToastService);
+  readonly checkingOut = signal(false);
 
   ngOnInit(): void {
     this.cartService.loadCart();
@@ -48,6 +51,19 @@ export class CartPageComponent implements OnInit {
   }
 
   checkout(): void {
-    this.toast.info("Checkout coming soon!");
+    this.checkingOut.set(true);
+    this.orderService.checkout().subscribe({
+      next: (res) => {
+        this.cartService.clearLocal();
+        this.router.navigate(["/orders/success", res.order_id], {
+          state: { totalAmount: res.total_amount },
+        });
+      },
+      error: (err) => {
+        this.checkingOut.set(false);
+        const detail = err.error?.detail;
+        this.toast.error(detail || "Checkout failed. Please try again.");
+      },
+    });
   }
 }

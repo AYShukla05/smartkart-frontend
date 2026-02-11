@@ -55,6 +55,30 @@ export const routes: Routes = [
             (m) => m.CartPageComponent
           ),
       },
+      {
+        path: "orders/success/:id",
+        canActivate: [buyerGuard],
+        loadComponent: () =>
+          import(
+            "./features/orders/order-success/order-success.component"
+          ).then((m) => m.OrderSuccessComponent),
+      },
+      {
+        path: "orders/:id",
+        canActivate: [buyerGuard],
+        loadComponent: () =>
+          import(
+            "./features/orders/order-detail/order-detail.component"
+          ).then((m) => m.OrderDetailComponent),
+      },
+      {
+        path: "orders",
+        canActivate: [buyerGuard],
+        loadComponent: () =>
+          import(
+            "./features/orders/order-history/order-history.component"
+          ).then((m) => m.OrderHistoryComponent),
+      },
     ],
   },
 
