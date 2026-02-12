@@ -23,6 +23,49 @@
       </a>
     </div>
 
+    <!-- Filter Bar -->
+    <div
+      class="flex flex-wrap items-center gap-3 mb-6 p-4"
+      style="
+        background: var(--color-bg);
+        border-radius: var(--radius-lg);
+        box-shadow: var(--shadow-sm);
+      "
+    >
+      <input
+        type="text"
+        placeholder="Search your products..."
+        class="filter-input flex-1 min-w-[200px] px-4 py-2"
+        [value]="searchQuery()"
+        (input)="onSearchInput($event)"
+      />
+
+      <select
+        class="filter-input px-4 py-2"
+        [value]="selectedOrdering()"
+        (change)="onOrderingChange($event)"
+        style="background: var(--color-bg)"
+      >
+        @for (opt of orderingOptions; track opt.value) {
+        <option [value]="opt.value">{{ opt.label }}</option>
+        }
+      </select>
+
+      @if (hasActiveFilters()) {
+      <button
+        (click)="clearFilters()"
+        class="px-4 py-2 text-sm font-medium transition-all hover:opacity-80 cursor-pointer"
+        style="
+          background: var(--color-bg-secondary);
+          color: var(--color-text);
+          border-radius: var(--radius-md);
+        "
+      >
+        Clear
+      </button>
+      }
+    </div>
+
     <!-- Product Table -->
     <div
       style="
@@ -39,9 +82,9 @@
         <h2 class="text-lg font-medium" style="color: var(--color-text)">
           Products
         </h2>
-        @if (!isLoading() && products().length > 0) {
+        @if (!isLoading() && totalCount() > 0) {
         <span class="text-sm" style="color: var(--color-text-muted)">
-          {{ products().length }} {{ products().length === 1 ? 'product' : 'products' }}
+          {{ totalCount() }} {{ totalCount() === 1 ? 'product' : 'products' }}
         </span>
         }
       </div>
@@ -149,6 +192,18 @@
           }
         </tbody>
       </table>
+
+      <!-- Pagination -->
+      @if (totalCount() > pageSize) {
+      <div class="px-6 pb-4">
+        <app-pagination
+          [currentPage]="currentPage()"
+          [totalItems]="totalCount()"
+          [pageSize]="pageSize"
+          (pageChange)="onPageChange($event)"
+        />
+      </div>
+      }
       }
     </div>
   </div>

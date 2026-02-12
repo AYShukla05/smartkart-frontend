@@ -166,6 +166,16 @@
       </div>
       }
     </div>
+
+    <!-- Pagination -->
+    @if (totalCount() > pageSize) {
+    <app-pagination
+      [currentPage]="currentPage()"
+      [totalItems]="totalCount()"
+      [pageSize]="pageSize"
+      (pageChange)="onPageChange($event)"
+    />
+    }
     }
   </div>
 </div>

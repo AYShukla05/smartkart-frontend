@@ -1,13 +1,13 @@
 import { Component, ChangeDetectionStrategy, inject, signal, computed, OnInit } from "@angular/core";
-import { CommonModule } from "@angular/common";
-import { ActivatedRoute, Router, RouterLink } from "@angular/router";
+import { CommonModule, Location } from "@angular/common";
+import { ActivatedRoute, Router } from "@angular/router";
 import { ProductService, ProductDetail, CartService, CartItem, AuthService } from "../../../core";
 import { ToastService } from "../../../shared";
 
 @Component({
   selector: "app-public-product-detail",
   standalone: true,
-  imports: [CommonModule, RouterLink],
+  imports: [CommonModule],
   templateUrl: "./product-detail.component.html",
   styleUrl: "./product-detail.component.scss",
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -15,6 +15,7 @@ import { ToastService } from "../../../shared";
 export class PublicProductDetailComponent implements OnInit {
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
+  private readonly location = inject(Location);
   private readonly productService = inject(ProductService);
   readonly cartService = inject(CartService);
   readonly auth = inject(AuthService);
@@ -69,6 +70,18 @@ export class PublicProductDetailComponent implements OnInit {
 
   selectImage(index: number): void {
     this.selectedImageIndex.set(index);
+  }
+
+  // True browser back rather than a fixed route, so a buyer returns to
+  // exactly the search/filter/page they came from instead of a bare list -
+  // falls back to a direct route only if there's no in-app history to go
+  // back to (e.g. this page was opened directly via a shared link).
+  goBack(): void {
+    if (window.history.length > 1) {
+      this.location.back();
+    } else {
+      this.router.navigate(["/products"]);
+    }
   }
 
   addToCart(): void {

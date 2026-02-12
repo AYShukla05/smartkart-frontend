@@ -2,7 +2,7 @@ import { Component, ChangeDetectionStrategy, inject, OnInit, signal } from "@ang
 import { CommonModule } from "@angular/common";
 import { RouterLink } from "@angular/router";
 import { forkJoin } from "rxjs";
-import { ProductService, OrderService, SellerOrder } from "../../../core";
+import { OrderService, SellerOrder } from "../../../core";
 import { ToastService } from "../../../shared";
 
 interface DashboardStats {
@@ -19,7 +19,6 @@ interface DashboardStats {
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class SellerDashboardComponent implements OnInit {
-  private readonly productService = inject(ProductService);
   private readonly orderService = inject(OrderService);
   private readonly toast = inject(ToastService);
 
@@ -33,27 +32,16 @@ export class SellerDashboardComponent implements OnInit {
 
   ngOnInit(): void {
     forkJoin({
-      products: this.productService.getAll(),
+      stats: this.orderService.getSellerStats(),
       orders: this.orderService.getSellerOrders(),
     }).subscribe({
-      next: ({ products, orders }) => {
-        const totalRevenue = orders.reduce(
-          (sum, order) =>
-            sum +
-            order.items.reduce(
-              (itemSum, item) =>
-                itemSum + item.price_at_purchase * item.quantity,
-              0
-            ),
-          0
-        );
-
+      next: ({ stats, orders }) => {
         this.stats.set({
-          totalProducts: products.length,
-          totalOrders: orders.length,
-          totalRevenue,
+          totalProducts: stats.total_products,
+          totalOrders: stats.total_orders,
+          totalRevenue: stats.total_revenue,
         });
-        this.recentOrders.set(orders.slice(0, 5));
+        this.recentOrders.set(orders.results.slice(0, 5));
         this.isLoading.set(false);
       },
       error: () => {

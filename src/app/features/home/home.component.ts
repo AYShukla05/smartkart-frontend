@@ -19,9 +19,9 @@ export class HomeComponent implements OnInit {
   readonly isLoading = signal(true);
 
   ngOnInit(): void {
-    this.productService.getPublicList().subscribe({
-      next: (products) => {
-        this.featuredProducts.set(products.slice(0, 4));
+    this.productService.getPublicList({ page_size: 4 }).subscribe({
+      next: (response) => {
+        this.featuredProducts.set(response.results);
         this.isLoading.set(false);
       },
       error: () => {
