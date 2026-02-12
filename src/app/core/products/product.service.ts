@@ -2,6 +2,7 @@ import { inject, Injectable } from "@angular/core";
 import { HttpClient } from "@angular/common/http";
 import { Observable } from "rxjs";
 import { ApiService } from "../api/api.service";
+import { PaginatedResponse } from "../../shared";
 import {
   Product,
   ProductDetail,
@@ -19,9 +20,21 @@ export class ProductService {
 
   // --- Public endpoints ---
 
-  /** Fetches all active products (public) */
-  getPublicList(): Observable<Product[]> {
-    return this.api.get<Product[]>("/products/");
+  /** Fetches paginated, filterable product list (public) */
+  getPublicList(params?: {
+    page?: number;
+    page_size?: number;
+    search?: string;
+    category?: number;
+    ordering?: string;
+  }): Observable<PaginatedResponse<Product>> {
+    const query: Record<string, string | number> = {};
+    if (params?.page) query["page"] = params.page;
+    if (params?.page_size) query["page_size"] = params.page_size;
+    if (params?.search) query["search"] = params.search;
+    if (params?.category) query["category"] = params.category;
+    if (params?.ordering) query["ordering"] = params.ordering;
+    return this.api.get<PaginatedResponse<Product>>("/products/", query);
   }
 
   /** Fetches a single product's full details (public, active only) */
@@ -31,9 +44,11 @@ export class ProductService {
 
   // --- Seller endpoints ---
 
-  /** Fetches all products owned by the current seller */
-  getAll(): Observable<Product[]> {
-    return this.api.get<Product[]>("/products/my/");
+  /** Fetches paginated products owned by the current seller */
+  getAll(page?: number): Observable<PaginatedResponse<Product>> {
+    const query: Record<string, string | number> = {};
+    if (page) query["page"] = page;
+    return this.api.get<PaginatedResponse<Product>>("/products/my/", query);
   }
 
   /** Fetches a single product by ID (seller's own, for edit form) */

@@ -1,18 +1,27 @@
-import { Component, ChangeDetectionStrategy, inject, signal, computed, OnInit } from "@angular/core";
+import {
+  Component,
+  ChangeDetectionStrategy,
+  inject,
+  signal,
+  OnInit,
+  DestroyRef,
+} from "@angular/core";
 import { CommonModule } from "@angular/common";
 import { RouterLink } from "@angular/router";
+import { Subject, debounceTime, distinctUntilChanged } from "rxjs";
+import { takeUntilDestroyed } from "@angular/core/rxjs-interop";
 import {
   ProductService,
   Product,
   CategoryService,
   Category,
 } from "../../../core";
-import { ToastService } from "../../../shared";
+import { ToastService, PaginationComponent } from "../../../shared";
 
 @Component({
   selector: "app-public-product-list",
   standalone: true,
-  imports: [CommonModule, RouterLink],
+  imports: [CommonModule, RouterLink, PaginationComponent],
   templateUrl: "./product-list.component.html",
   styleUrl: "./product-list.component.scss",
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -21,6 +30,7 @@ export class PublicProductListComponent implements OnInit {
   private readonly productService = inject(ProductService);
   private readonly categoryService = inject(CategoryService);
   private readonly toast = inject(ToastService);
+  private readonly destroyRef = inject(DestroyRef);
 
   readonly products = signal<Product[]>([]);
   readonly categories = signal<Category[]>([]);
@@ -28,35 +38,60 @@ export class PublicProductListComponent implements OnInit {
 
   readonly searchQuery = signal("");
   readonly selectedCategoryId = signal<number | null>(null);
+  readonly selectedOrdering = signal("-created_at");
+  readonly currentPage = signal(1);
+  readonly totalCount = signal(0);
+  readonly pageSize = 12;
 
-  readonly filteredProducts = computed(() => {
-    let result = this.products();
-    const query = this.searchQuery().toLowerCase().trim();
-    const catId = this.selectedCategoryId();
+  private readonly searchSubject = new Subject<string>();
 
-    if (query) {
-      result = result.filter((p) => p.name.toLowerCase().includes(query));
-    }
-    if (catId !== null) {
-      result = result.filter((p) => p.category === catId);
-    }
-    return result;
-  });
+  readonly orderingOptions = [
+    { value: "-created_at", label: "Newest First" },
+    { value: "created_at", label: "Oldest First" },
+    { value: "price", label: "Price: Low to High" },
+    { value: "-price", label: "Price: High to Low" },
+    { value: "name", label: "Name: A to Z" },
+    { value: "-name", label: "Name: Z to A" },
+  ];
 
-  readonly hasActiveFilters = computed(
-    () => this.searchQuery().trim() !== "" || this.selectedCategoryId() !== null
-  );
+  readonly hasActiveFilters = () =>
+    this.searchQuery().trim() !== "" || this.selectedCategoryId() !== null;
 
   ngOnInit(): void {
+    this.searchSubject
+      .pipe(debounceTime(300), distinctUntilChanged(), takeUntilDestroyed(this.destroyRef))
+      .subscribe((query) => {
+        this.searchQuery.set(query);
+        this.currentPage.set(1);
+        this.loadProducts();
+      });
+
     this.loadProducts();
     this.loadCategories();
   }
 
-  private loadProducts(): void {
+  loadProducts(): void {
     this.isLoading.set(true);
-    this.productService.getPublicList().subscribe({
-      next: (products) => {
-        this.products.set(products);
+    const params: {
+      page?: number;
+      search?: string;
+      category?: number;
+      ordering?: string;
+    } = {
+      page: this.currentPage(),
+      ordering: this.selectedOrdering(),
+    };
+
+    const search = this.searchQuery().trim();
+    if (search) params.search = search;
+
+    const catId = this.selectedCategoryId();
+    if (catId !== null) params.category = catId;
+
+    this.productService.getPublicList(params).subscribe({
+      next: (response) => {
+        this.products.set(response.results);
+        this.totalCount.set(response.count);
         this.isLoading.set(false);
       },
       error: () => {
@@ -75,16 +110,33 @@ export class PublicProductListComponent implements OnInit {
 
   onSearchInput(event: Event): void {
     const value = (event.target as HTMLInputElement).value;
-    this.searchQuery.set(value);
+    this.searchSubject.next(value);
   }
 
   onCategoryChange(event: Event): void {
     const value = (event.target as HTMLSelectElement).value;
     this.selectedCategoryId.set(value ? Number(value) : null);
+    this.currentPage.set(1);
+    this.loadProducts();
+  }
+
+  onOrderingChange(event: Event): void {
+    const value = (event.target as HTMLSelectElement).value;
+    this.selectedOrdering.set(value);
+    this.currentPage.set(1);
+    this.loadProducts();
+  }
+
+  onPageChange(page: number): void {
+    this.currentPage.set(page);
+    this.loadProducts();
   }
 
   clearFilters(): void {
     this.searchQuery.set("");
     this.selectedCategoryId.set(null);
+    this.selectedOrdering.set("-created_at");
+    this.currentPage.set(1);
+    this.loadProducts();
   }
 }

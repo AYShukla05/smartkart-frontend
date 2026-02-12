@@ -39,9 +39,9 @@
         <h2 class="text-lg font-medium" style="color: var(--color-text)">
           Products
         </h2>
-        @if (!isLoading() && products().length > 0) {
+        @if (!isLoading() && totalCount() > 0) {
         <span class="text-sm" style="color: var(--color-text-muted)">
-          {{ products().length }} {{ products().length === 1 ? 'product' : 'products' }}
+          {{ totalCount() }} {{ totalCount() === 1 ? 'product' : 'products' }}
         </span>
         }
       </div>
@@ -149,6 +149,18 @@
           }
         </tbody>
       </table>
+
+      <!-- Pagination -->
+      @if (totalCount() > pageSize) {
+      <div class="px-6 pb-4">
+        <app-pagination
+          [currentPage]="currentPage()"
+          [totalItems]="totalCount()"
+          [pageSize]="pageSize"
+          (pageChange)="onPageChange($event)"
+        />
+      </div>
+      }
       }
     </div>
   </div>

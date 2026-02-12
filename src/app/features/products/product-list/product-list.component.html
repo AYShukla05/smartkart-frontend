@@ -41,6 +41,18 @@
         }
       </select>
 
+      <!-- Ordering -->
+      <select
+        class="filter-input px-4 py-2"
+        [value]="selectedOrdering()"
+        (change)="onOrderingChange($event)"
+        style="background: var(--color-bg)"
+      >
+        @for (opt of orderingOptions; track opt.value) {
+        <option [value]="opt.value">{{ opt.label }}</option>
+        }
+      </select>
+
       <!-- Clear Filters -->
       @if (hasActiveFilters()) {
       <button
@@ -82,7 +94,7 @@
       </svg>
       Loading products...
     </div>
-    } @else if (filteredProducts().length === 0) {
+    } @else if (products().length === 0) {
     <!-- Empty State -->
     <div
       class="p-12 text-center"
@@ -136,7 +148,7 @@
     } @else {
     <!-- Product Grid -->
     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-      @for (product of filteredProducts(); track product.id) {
+      @for (product of products(); track product.id) {
       <a
         [routerLink]="['/products', product.id]"
         class="product-card block overflow-hidden"
@@ -211,6 +223,16 @@
       </a>
       }
     </div>
+
+    <!-- Pagination -->
+    @if (totalCount() > pageSize) {
+    <app-pagination
+      [currentPage]="currentPage()"
+      [totalItems]="totalCount()"
+      [pageSize]="pageSize"
+      (pageChange)="onPageChange($event)"
+    />
+    }
     }
   </div>
 </div>

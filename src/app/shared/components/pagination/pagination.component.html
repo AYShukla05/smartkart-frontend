@@ -1,0 +1,75 @@
+<nav aria-label="Pagination" class="flex items-center justify-between mt-6">
+  <p class="text-sm" style="color: var(--color-text-secondary)">
+    Showing {{ showingFrom() }}–{{ showingTo() }} of {{ totalItems() }}
+  </p>
+
+  <div class="flex items-center gap-1">
+    <!-- Previous -->
+    <button
+      (click)="goToPage(currentPage() - 1)"
+      [disabled]="!hasPrevious()"
+      class="px-3 py-1.5 text-sm font-medium rounded transition-all cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
+      style="
+        color: var(--color-text-secondary);
+        border: 1px solid var(--color-border);
+        border-radius: var(--radius-md);
+      "
+      aria-label="Previous page"
+    >
+      Prev
+    </button>
+
+    <!-- Page Numbers -->
+    @for (page of visiblePages(); track $index) {
+      @if (page === '...') {
+        <span
+          class="px-2 py-1.5 text-sm"
+          style="color: var(--color-text-muted)"
+          aria-hidden="true"
+        >
+          ...
+        </span>
+      } @else {
+        <button
+          (click)="goToPage(+page)"
+          class="px-3 py-1.5 text-sm font-medium rounded transition-all cursor-pointer"
+          [style.background]="
+            page === currentPage()
+              ? 'var(--color-primary)'
+              : 'transparent'
+          "
+          [style.color]="
+            page === currentPage()
+              ? 'var(--color-text-inverse)'
+              : 'var(--color-text-secondary)'
+          "
+          [style.border]="
+            page === currentPage()
+              ? '1px solid var(--color-primary)'
+              : '1px solid var(--color-border)'
+          "
+          style="border-radius: var(--radius-md)"
+          [attr.aria-current]="page === currentPage() ? 'page' : null"
+          [attr.aria-label]="'Page ' + page"
+        >
+          {{ page }}
+        </button>
+      }
+    }
+
+    <!-- Next -->
+    <button
+      (click)="goToPage(currentPage() + 1)"
+      [disabled]="!hasNext()"
+      class="px-3 py-1.5 text-sm font-medium rounded transition-all cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
+      style="
+        color: var(--color-text-secondary);
+        border: 1px solid var(--color-border);
+        border-radius: var(--radius-md);
+      "
+      aria-label="Next page"
+    >
+      Next
+    </button>
+  </div>
+</nav>

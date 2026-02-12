@@ -5,6 +5,7 @@ export const routes: Routes = [
   // Auth routes (guest only)
   {
     path: "login",
+    title: "Login — SmartKart",
     canActivate: [guestGuard],
     loadComponent: () =>
       import("./features/auth/login/login.component").then(
@@ -13,6 +14,7 @@ export const routes: Routes = [
   },
   {
     path: "register",
+    title: "Register — SmartKart",
     canActivate: [guestGuard],
     loadComponent: () =>
       import("./features/auth/register/register.component").then(
@@ -30,11 +32,13 @@ export const routes: Routes = [
     children: [
       {
         path: "",
+        title: "Home — SmartKart",
         loadComponent: () =>
           import("./features/home/home.component").then((m) => m.HomeComponent),
       },
       {
         path: "products",
+        title: "Products — SmartKart",
         loadComponent: () =>
           import(
             "./features/products/product-list/product-list.component"
@@ -42,6 +46,7 @@ export const routes: Routes = [
       },
       {
         path: "products/:id",
+        title: "Product Details — SmartKart",
         loadComponent: () =>
           import(
             "./features/products/product-detail/product-detail.component"
@@ -49,6 +54,7 @@ export const routes: Routes = [
       },
       {
         path: "cart",
+        title: "Cart — SmartKart",
         canActivate: [buyerGuard],
         loadComponent: () =>
           import("./features/cart/cart-page/cart-page.component").then(
@@ -57,6 +63,7 @@ export const routes: Routes = [
       },
       {
         path: "orders/success/:id",
+        title: "Order Confirmed — SmartKart",
         canActivate: [buyerGuard],
         loadComponent: () =>
           import(
@@ -73,6 +80,7 @@ export const routes: Routes = [
       },
       {
         path: "orders",
+        title: "My Orders — SmartKart",
         canActivate: [buyerGuard],
         loadComponent: () =>
           import(
@@ -93,6 +101,7 @@ export const routes: Routes = [
     children: [
       {
         path: "",
+        title: "Dashboard — SmartKart Seller",
         loadComponent: () =>
           import("./features/seller/dashboard/dashboard.component").then(
             (m) => m.SellerDashboardComponent
@@ -100,6 +109,7 @@ export const routes: Routes = [
       },
       {
         path: "products",
+        title: "My Products — SmartKart Seller",
         loadComponent: () =>
           import(
             "./features/seller/products/product-list/product-list.component"
@@ -107,6 +117,7 @@ export const routes: Routes = [
       },
       {
         path: "products/new",
+        title: "New Product — SmartKart Seller",
         loadComponent: () =>
           import(
             "./features/seller/products/product-form/product-form.component"
@@ -114,6 +125,7 @@ export const routes: Routes = [
       },
       {
         path: "products/:id/edit",
+        title: "Edit Product — SmartKart Seller",
         loadComponent: () =>
           import(
             "./features/seller/products/product-form/product-form.component"
@@ -121,6 +133,7 @@ export const routes: Routes = [
       },
       {
         path: "orders",
+        title: "Orders — SmartKart Seller",
         loadComponent: () =>
           import(
             "./features/seller/orders/order-list/order-list.component"
@@ -145,6 +158,7 @@ export const routes: Routes = [
       },
       {
         path: "categories",
+        title: "Categories — SmartKart Admin",
         loadComponent: () =>
           import("./features/admin/categories/category-list.component").then(
             (m) => m.CategoryListComponent

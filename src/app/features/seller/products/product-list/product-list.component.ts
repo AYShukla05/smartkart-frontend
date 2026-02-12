@@ -2,12 +2,12 @@ import { Component, ChangeDetectionStrategy, inject, signal, OnInit } from "@ang
 import { CommonModule } from "@angular/common";
 import { RouterLink } from "@angular/router";
 import { ProductService, Product } from "../../../../core";
-import { ToastService, ConfirmModalComponent } from "../../../../shared";
+import { ToastService, ConfirmModalComponent, PaginationComponent } from "../../../../shared";
 
 @Component({
   selector: "app-product-list",
   standalone: true,
-  imports: [CommonModule, RouterLink, ConfirmModalComponent],
+  imports: [CommonModule, RouterLink, ConfirmModalComponent, PaginationComponent],
   templateUrl: "./product-list.component.html",
   styleUrl: "./product-list.component.scss",
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -18,6 +18,9 @@ export class ProductListComponent implements OnInit {
 
   readonly products = signal<Product[]>([]);
   readonly isLoading = signal(true);
+  readonly currentPage = signal(1);
+  readonly totalCount = signal(0);
+  readonly pageSize = 12;
 
   // Delete confirmation state
   readonly deleteModalOpen = signal(false);
@@ -30,9 +33,10 @@ export class ProductListComponent implements OnInit {
 
   loadProducts(): void {
     this.isLoading.set(true);
-    this.productService.getAll().subscribe({
-      next: (products) => {
-        this.products.set(products);
+    this.productService.getAll(this.currentPage()).subscribe({
+      next: (response) => {
+        this.products.set(response.results);
+        this.totalCount.set(response.count);
         this.isLoading.set(false);
       },
       error: () => {
@@ -40,6 +44,11 @@ export class ProductListComponent implements OnInit {
         this.isLoading.set(false);
       },
     });
+  }
+
+  onPageChange(page: number): void {
+    this.currentPage.set(page);
+    this.loadProducts();
   }
 
   confirmDelete(id: number): void {
