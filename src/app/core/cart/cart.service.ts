@@ -62,6 +62,10 @@ export class CartService {
     productId: number,
     quantity: number
   ): Observable<CartItem> {
+    // Snapshot before the optimistic mutation so a failed request can be
+    // rolled back locally instead of relying on a (potentially also-failing)
+    // network refetch, which could otherwise wipe the cart to empty.
+    const snapshot = this._items();
     this._items.update((items) =>
       items.map((item) =>
         item.id === itemId ? { ...item, quantity } : item
@@ -74,19 +78,20 @@ export class CartService {
       })
       .pipe(
         catchError((err) => {
-          this.loadCart();
+          this._items.set(snapshot);
           throw err;
         })
       );
   }
 
   removeItem(itemId: number): Observable<void> {
+    const snapshot = this._items();
     this._items.update((items) => items.filter((item) => item.id !== itemId));
     return this.api
       .delete<void>(`/cart/items/${itemId}/`)
       .pipe(
         catchError((err) => {
-          this.loadCart();
+          this._items.set(snapshot);
           throw err;
         })
       );

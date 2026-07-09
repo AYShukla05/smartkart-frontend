@@ -147,7 +147,8 @@
           <div class="flex items-center gap-2">
             <button
               (click)="decrement(item)"
-              class="qty-btn"
+              [disabled]="isPending(item.id)"
+              class="qty-btn disabled:opacity-50 disabled:cursor-not-allowed"
               title="Decrease quantity"
             >
               <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -162,7 +163,8 @@
             </span>
             <button
               (click)="increment(item)"
-              class="qty-btn"
+              [disabled]="isPending(item.id)"
+              class="qty-btn disabled:opacity-50 disabled:cursor-not-allowed"
               title="Increase quantity"
             >
               <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -181,7 +183,8 @@
           <!-- Remove Button -->
           <button
             (click)="removeItem(item)"
-            class="p-1.5 transition-all hover:opacity-70 cursor-pointer"
+            [disabled]="isPending(item.id)"
+            class="p-1.5 transition-all hover:opacity-70 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
             style="color: var(--color-danger)"
             title="Remove item"
           >

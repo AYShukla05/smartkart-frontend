@@ -58,18 +58,38 @@ describe("CartService", () => {
     httpMock.expectOne(`${API}/cart/items/1/`).flush(null);
   });
 
-  it("should reload cart on update error", () => {
+  it("should restore prior state locally on update error, without refetching the cart", () => {
     service.updateQuantity(1, 10, 5).subscribe({ error: () => {} });
+
+    // Optimistic update applied before the response
+    expect(service.items().find((i) => i.id === 1)?.quantity).toBe(5);
 
     // Flush PATCH with error
     httpMock
       .expectOne(`${API}/cart/items/1/`)
       .flush(null, { status: 500, statusText: "Server Error" });
 
-    // loadCart() triggered by catchError - flush the reload
-    httpMock.expectOne(`${API}/cart/`).flush({ items: mockItems });
+    // Recovery is a local snapshot restore - no GET /cart/ refetch is triggered
+    httpMock.expectNone(`${API}/cart/`);
 
     // Items restored to original
+    expect(service.items().find((i) => i.id === 1)?.quantity).toBe(2);
+  });
+
+  it("should restore prior state locally on remove error, without refetching the cart", () => {
+    service.removeItem(1).subscribe({ error: () => {} });
+
+    // Optimistic removal applied before the response
+    expect(service.items().length).toBe(1);
+
+    httpMock
+      .expectOne(`${API}/cart/items/1/`)
+      .flush(null, { status: 500, statusText: "Server Error" });
+
+    // Recovery is a local snapshot restore - no GET /cart/ refetch is triggered
+    httpMock.expectNone(`${API}/cart/`);
+
+    expect(service.items().length).toBe(2);
     expect(service.items().find((i) => i.id === 1)?.quantity).toBe(2);
   });
 });
