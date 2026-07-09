@@ -1,4 +1,4 @@
-import { Component, ChangeDetectionStrategy, inject, signal, computed, OnInit } from "@angular/core";
+import { Component, ChangeDetectionStrategy, inject, signal, computed, OnInit, OnDestroy } from "@angular/core";
 import { CommonModule } from "@angular/common";
 import {
   NonNullableFormBuilder,
@@ -15,6 +15,7 @@ import {
   convertToWebp,
   isValidImageType,
   isValidFileSize,
+  normalizeApiError,
 } from "../../../../core";
 import { ToastService, ConfirmModalComponent } from "../../../../shared";
 
@@ -26,7 +27,7 @@ import { ToastService, ConfirmModalComponent } from "../../../../shared";
   styleUrl: "./product-form.component.scss",
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class ProductFormComponent implements OnInit {
+export class ProductFormComponent implements OnInit, OnDestroy {
   private readonly fb = inject(NonNullableFormBuilder);
   private readonly productService = inject(ProductService);
   private readonly categoryService = inject(CategoryService);
@@ -75,6 +76,12 @@ export class ProductFormComponent implements OnInit {
         this.loadProduct(id);
       }
     }
+  }
+
+  ngOnDestroy(): void {
+    // Revoke any pending preview object URLs still outstanding if the user
+    // navigates away mid-form (submit/removal already revoke their own).
+    this.pendingPreviews().forEach((p) => URL.revokeObjectURL(p.url));
   }
 
   private loadCategories(): void {
@@ -136,17 +143,7 @@ export class ProductFormComponent implements OnInit {
       },
       error: (err) => {
         this.isSubmitting.set(false);
-        if (err.status === 400 && err.error) {
-          const errors = err.error;
-          const firstKey = Object.keys(errors)[0];
-          if (firstKey && Array.isArray(errors[firstKey])) {
-            this.errorMessage.set(errors[firstKey][0]);
-          } else {
-            this.errorMessage.set("Validation failed. Please check your inputs.");
-          }
-        } else {
-          this.errorMessage.set("An error occurred. Please try again.");
-        }
+        this.errorMessage.set(normalizeApiError(err).message);
       },
     });
   }

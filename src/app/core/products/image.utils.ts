@@ -35,11 +35,18 @@ export function convertToWebp(
 
       canvas.toBlob(
         (blob) => {
-          if (blob) {
-            resolve(blob);
-          } else {
+          if (!blob) {
             reject(new Error("WebP conversion failed"));
+            return;
           }
+          if (blob.type !== "image/webp") {
+            // Some browsers silently fall back to another format (e.g. PNG)
+            // when WebP export isn't supported. Catch that here rather than
+            // uploading a mislabeled blob under a hardcoded image/webp Content-Type.
+            reject(new Error("Your browser doesn't support WebP image export."));
+            return;
+          }
+          resolve(blob);
         },
         "image/webp",
         quality
