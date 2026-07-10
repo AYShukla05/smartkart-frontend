@@ -1,6 +1,7 @@
 import { inject, Injectable } from "@angular/core";
-import { Observable } from "rxjs";
+import { Observable, map } from "rxjs";
 import { ApiService } from "../api/api.service";
+import { PaginatedResponse } from "../../shared";
 import { Category, CategoryRequest } from "./category.models";
 
 @Injectable({
@@ -9,9 +10,16 @@ import { Category, CategoryRequest } from "./category.models";
 export class CategoryService {
   private readonly api = inject(ApiService);
 
-  /** Fetches all categories (public) */
+  /**
+   * Fetches all categories (public). The backend paginates this endpoint
+   * (max_page_size 50), so this requests the maximum page size to cover
+   * realistic category counts and unwraps `.results` to keep callers
+   * working with a plain array.
+   */
   getAll(): Observable<Category[]> {
-    return this.api.get<Category[]>("/categories/");
+    return this.api
+      .get<PaginatedResponse<Category>>("/categories/", { page_size: 50 })
+      .pipe(map((response) => response.results));
   }
 
   /** Fetches a single category by ID */
