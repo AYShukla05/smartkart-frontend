@@ -17,6 +17,12 @@ export const guestGuard: CanActivateFn = () => {
     filter(Boolean),
     take(1),
     map(() => {
+      // Token existed but hydration determined the session isn't actually
+      // valid (e.g. refresh failed) - let the user reach the guest route.
+      if (!authService.isAuthenticated()) {
+        return true;
+      }
+
       if (authService.isAdmin()) {
         router.navigate(["/admin"]);
       } else if (authService.isSeller()) {

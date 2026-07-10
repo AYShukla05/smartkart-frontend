@@ -10,6 +10,7 @@ describe("Auth Guards", () => {
   let mockAuth: {
     hasValidToken: jasmine.Spy;
     isInitialized: ReturnType<typeof signal<boolean>>;
+    isAuthenticated: ReturnType<typeof computed<boolean>>;
     isAdmin: ReturnType<typeof computed<boolean>>;
     isSeller: ReturnType<typeof computed<boolean>>;
     isBuyer: ReturnType<typeof computed<boolean>>;
@@ -23,6 +24,7 @@ describe("Auth Guards", () => {
     mockAuth = {
       hasValidToken: jasmine.createSpy("hasValidToken"),
       isInitialized: signal(true),
+      isAuthenticated: computed(() => false),
       isAdmin: computed(() => false),
       isSeller: computed(() => false),
       isBuyer: computed(() => false),
@@ -47,6 +49,7 @@ describe("Auth Guards", () => {
 
     it("should redirect authenticated buyer to home", fakeAsync(() => {
       mockAuth.hasValidToken.and.returnValue(true);
+      mockAuth.isAuthenticated = computed(() => true);
       mockAuth.isBuyer = computed(() => true);
       // Re-configure to pick up new mock
       TestBed.overrideProvider(AuthService, { useValue: mockAuth });
@@ -61,6 +64,27 @@ describe("Auth Guards", () => {
 
       expect(emitted).toBeFalse();
       expect(mockRouter.navigate).toHaveBeenCalledWith(["/"]);
+    }));
+
+    it("should allow access to login when token existed but session is not authenticated after hydration", fakeAsync(() => {
+      // e.g. both access and refresh tokens died simultaneously: hasValidToken()
+      // was true up front (token present in storage), but by the time
+      // isInitialized resolves, the session turned out invalid and isAuthenticated
+      // is false. The guard must let the user reach /login instead of bouncing to "/".
+      mockAuth.hasValidToken.and.returnValue(true);
+      mockAuth.isAuthenticated = computed(() => false);
+      TestBed.overrideProvider(AuthService, { useValue: mockAuth });
+
+      const result$ = TestBed.runInInjectionContext(() =>
+        guestGuard(dummyRoute, dummyState)
+      );
+
+      let emitted: boolean | undefined;
+      (result$ as Observable<boolean>).subscribe((v) => (emitted = v));
+      tick();
+
+      expect(emitted).toBeTrue();
+      expect(mockRouter.navigate).not.toHaveBeenCalled();
     }));
   });
 
