@@ -35,6 +35,11 @@ export interface ProductDetail {
   updated_at: string;
 }
 
+/** Shape returned by GET /api/products/admin/ - same as Product, plus the seller's email (IsAdmin-only, never exposed publicly) */
+export interface AdminProduct extends Product {
+  seller_email: string;
+}
+
 /** Shape sent to POST/PATCH /api/products/my/ */
 export interface ProductRequest {
   name: string;

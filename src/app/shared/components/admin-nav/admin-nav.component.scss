@@ -1,0 +1,10 @@
+a {
+  &:hover {
+    background: var(--color-bg-secondary);
+  }
+}
+
+.admin-tab-active {
+  background: var(--color-primary-light);
+  color: var(--color-primary) !important;
+}

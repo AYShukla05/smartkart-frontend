@@ -4,6 +4,7 @@ import { Observable } from "rxjs";
 import { ApiService } from "../api/api.service";
 import { PaginatedResponse } from "../../shared";
 import {
+  AdminProduct,
   Product,
   ProductDetail,
   ProductImage,
@@ -40,6 +41,25 @@ export class ProductService {
   /** Fetches a single product's full details (public, active only) */
   getPublicDetail(id: number): Observable<ProductDetail> {
     return this.api.get<ProductDetail>(`/products/${id}/`);
+  }
+
+  // --- Admin endpoints ---
+
+  /** Fetches every product platform-wide, regardless of seller or is_active (admin only) */
+  getAdminList(params?: {
+    page?: number;
+    search?: string;
+    category?: number;
+    is_active?: boolean;
+    ordering?: string;
+  }): Observable<PaginatedResponse<AdminProduct>> {
+    const query: Record<string, string | number> = {};
+    if (params?.page) query["page"] = params.page;
+    if (params?.search) query["search"] = params.search;
+    if (params?.category) query["category"] = params.category;
+    if (params?.is_active !== undefined) query["is_active"] = String(params.is_active);
+    if (params?.ordering) query["ordering"] = params.ordering;
+    return this.api.get<PaginatedResponse<AdminProduct>>("/products/admin/", query);
   }
 
   // --- Seller endpoints ---

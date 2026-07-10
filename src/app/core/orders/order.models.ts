@@ -24,3 +24,20 @@ export interface CheckoutResponse {
   order_id: number;
   total_amount: number;
 }
+
+export interface AdminOrderItem {
+  id: number;
+  product_name: string;
+  quantity: number;
+  price_at_purchase: number;
+  seller_email: string;
+}
+
+export interface AdminOrder {
+  id: number;
+  buyer_email: string;
+  status: "PLACED" | "CANCELLED";
+  total_amount: number;
+  created_at: string;
+  items: AdminOrderItem[];
+}

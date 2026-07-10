@@ -164,6 +164,30 @@ export const routes: Routes = [
             (m) => m.CategoryListComponent
           ),
       },
+      {
+        path: "users",
+        title: "Users - SmartKart Admin",
+        loadComponent: () =>
+          import("./features/admin/users/user-list.component").then(
+            (m) => m.AdminUserListComponent
+          ),
+      },
+      {
+        path: "products",
+        title: "Products - SmartKart Admin",
+        loadComponent: () =>
+          import("./features/admin/products/product-list.component").then(
+            (m) => m.AdminProductListComponent
+          ),
+      },
+      {
+        path: "orders",
+        title: "Orders - SmartKart Admin",
+        loadComponent: () =>
+          import("./features/admin/orders/order-list.component").then(
+            (m) => m.AdminOrderListComponent
+          ),
+      },
     ],
   },
 
