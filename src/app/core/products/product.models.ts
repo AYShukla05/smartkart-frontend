@@ -23,6 +23,7 @@ export interface ProductDetail {
   id: number;
   name: string;
   description: string;
+  seo_keywords: string[];
   price: number;
   stock: number;
   category: number;
@@ -44,6 +45,7 @@ export interface AdminProduct extends Product {
 export interface ProductRequest {
   name: string;
   description: string;
+  seo_keywords: string[];
   price: number;
   stock: number;
   category: number;

@@ -12,12 +12,20 @@ import {
   CategoryService,
   Category,
   ProductImage,
+  AuthService,
   convertToWebp,
   isValidImageType,
   isValidFileSize,
   normalizeApiError,
 } from "../../../../core";
 import { ToastService, ConfirmModalComponent } from "../../../../shared";
+import { environment } from "../../../../../environments/environment";
+
+interface AiDescriptionSuggestions {
+  title: string;
+  bullets: string[];
+  seoKeywords: string[];
+}
 
 @Component({
   selector: "app-product-form",
@@ -31,6 +39,7 @@ export class ProductFormComponent implements OnInit, OnDestroy {
   private readonly fb = inject(NonNullableFormBuilder);
   private readonly productService = inject(ProductService);
   private readonly categoryService = inject(CategoryService);
+  private readonly authService = inject(AuthService);
   private readonly toast = inject(ToastService);
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
@@ -55,6 +64,31 @@ export class ProductFormComponent implements OnInit, OnDestroy {
   readonly deleteModalOpen = signal(false);
   readonly deletingImageId = signal<number | null>(null);
   readonly isDeletingImage = signal(false);
+
+  // AI description generation
+  readonly isGeneratingDescription = signal(false);
+  readonly aiGenerationError = signal<string | null>(null);
+  readonly aiSuggestions = signal<AiDescriptionSuggestions | null>(null);
+  // Keywords already saved on the product before this edit session (empty for
+  // a new product). Submitted as-is whenever aiSuggestions is null, so
+  // editing unrelated fields (price, stock) never silently wipes keywords
+  // from an earlier generation that this session didn't touch.
+  readonly existingSeoKeywords = signal<string[]>([]);
+  // Whether the "Also suggested" panel is expanded. Purely cosmetic - never
+  // clears aiSuggestions itself, so Hide is always reversible via Show.
+  readonly suggestionsVisible = signal(true);
+  // Free text the seller can add to steer generation (materials, warranty,
+  // target keywords, etc.) - not part of productForm since it's only ever
+  // used to build the AI prompt, never submitted with the product itself.
+  readonly aiAdditionalDetails = this.fb.control("", [Validators.maxLength(500)]);
+  // Undo/redo pair for the description field around the most recent
+  // generation: preAiDescription is what was there before, aiDescription is
+  // what the AI wrote. Both non-null exactly while that generation's result
+  // is still available to switch between; Discard clears both.
+  readonly preAiDescription = signal<string | null>(null);
+  readonly aiDescription = signal<string | null>(null);
+  // Which of the two the description field currently holds.
+  readonly showingAiDescription = signal(false);
 
   readonly productForm = this.fb.group({
     name: ["", [Validators.required, Validators.maxLength(255)]],
@@ -103,6 +137,7 @@ export class ProductFormComponent implements OnInit, OnDestroy {
           category: product.category,
           is_active: product.is_active,
         });
+        this.existingSeoKeywords.set(product.seo_keywords);
         this.images.set(product.images);
         this.isLoading.set(false);
       },
@@ -122,7 +157,14 @@ export class ProductFormComponent implements OnInit, OnDestroy {
     this.isSubmitting.set(true);
     this.errorMessage.set(null);
 
-    const data = this.productForm.getRawValue();
+    const suggestions = this.aiSuggestions();
+    const data = {
+      ...this.productForm.getRawValue(),
+      // A live (non-discarded) generation's keywords take over; otherwise
+      // whatever the product already had (empty for a new product) carries
+      // through unchanged.
+      seo_keywords: suggestions ? suggestions.seoKeywords : this.existingSeoKeywords(),
+    };
     const editId = this.editId();
 
     const request = editId
@@ -162,6 +204,166 @@ export class ProductFormComponent implements OnInit, OnDestroy {
 
   get category() {
     return this.productForm.get("category");
+  }
+
+  // --- AI description generation ---
+
+  async generateDescription(): Promise<void> {
+    const { name, category: categoryId, price, description: previousDescription } =
+      this.productForm.getRawValue();
+    const category = this.categories().find((c) => c.id === categoryId);
+
+    if (!name.trim() || !category || !price) {
+      this.toast.error("Enter a product name, category, and price first.");
+      return;
+    }
+
+    this.isGeneratingDescription.set(true);
+    this.aiGenerationError.set(null);
+    this.aiSuggestions.set(null);
+    this.suggestionsVisible.set(true);
+    this.preAiDescription.set(previousDescription);
+    this.aiDescription.set(null);
+    this.showingAiDescription.set(true);
+    this.productForm.controls.description.setValue("");
+
+    let streamError: string | null = null;
+
+    try {
+      const response = await fetch(`${environment.apiUrl}/ai/generate-description/`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${this.authService.getAccessToken()}`,
+        },
+        body: JSON.stringify({
+          name: name.trim(),
+          category: category.name,
+          price,
+          additional_details: this.aiAdditionalDetails.value.trim(),
+        }),
+      });
+
+      if (!response.ok || !response.body) {
+        throw new Error(`Request failed with status ${response.status}`);
+      }
+
+      const reader = response.body.getReader();
+      const decoder = new TextDecoder();
+      let buffer = "";
+      let streamDone = false;
+
+      while (!streamDone) {
+        const { done, value } = await reader.read();
+        streamDone = done;
+        if (value) {
+          buffer += decoder.decode(value, { stream: true });
+        }
+
+        // SSE events are separated by a blank line ("\n\n"). A single
+        // fetch read() chunk isn't guaranteed to end on that boundary, so
+        // hold back any trailing partial event for the next chunk -
+        // mirrors the buffering the backend does for the JSON marker.
+        const events = buffer.split("\n\n");
+        buffer = events.pop() ?? "";
+
+        for (const event of events) {
+          if (this.applySseEvent(event) === "error") {
+            streamError = this.aiGenerationError();
+          }
+        }
+      }
+    } catch {
+      streamError = "Failed to generate description. Please try again.";
+    }
+
+    if (streamError) {
+      this.productForm.controls.description.setValue(previousDescription);
+      this.aiSuggestions.set(null);
+      this.preAiDescription.set(null);
+      this.aiDescription.set(null);
+      this.showingAiDescription.set(false);
+      this.aiGenerationError.set(streamError);
+    }
+    this.isGeneratingDescription.set(false);
+  }
+
+  /** Switch the description field back to what it was before this generation. */
+  undoAiDescription(): void {
+    if (!this.showingAiDescription()) return;
+    this.productForm.controls.description.setValue(this.preAiDescription() ?? "");
+    this.showingAiDescription.set(false);
+  }
+
+  /** Switch the description field back to the AI-written version. */
+  redoAiDescription(): void {
+    const ai = this.aiDescription();
+    if (this.showingAiDescription() || ai === null) return;
+    this.productForm.controls.description.setValue(ai);
+    this.showingAiDescription.set(true);
+  }
+
+  /** Permanently reject this generation's description - restores the previous text and closes the banner. */
+  discardAiDescription(): void {
+    this.productForm.controls.description.setValue(this.preAiDescription() ?? "");
+    this.preAiDescription.set(null);
+    this.aiDescription.set(null);
+    this.showingAiDescription.set(false);
+  }
+
+  hideSuggestions(): void {
+    this.suggestionsVisible.set(false);
+  }
+
+  showSuggestions(): void {
+    this.suggestionsVisible.set(true);
+  }
+
+  /** Permanently reject this generation's title/bullet/keyword suggestions. */
+  discardSuggestions(): void {
+    this.aiSuggestions.set(null);
+  }
+
+  private applySseEvent(event: string): "error" | void {
+    if (!event.startsWith("data: ")) return;
+    const data = event.slice("data: ".length);
+
+    if (data === "[DONE]") {
+      return;
+    }
+
+    if (data.startsWith("[ERROR]")) {
+      this.aiGenerationError.set(data.slice("[ERROR]".length).trim());
+      return "error";
+    }
+
+    if (data.startsWith("[RESULT]")) {
+      const result = JSON.parse(data.slice("[RESULT]".length));
+      this.aiSuggestions.set({
+        title: result.title ?? "",
+        bullets: result.bullets ?? [],
+        seoKeywords: result.seo_keywords ?? [],
+      });
+      this.aiDescription.set(result.description ?? "");
+      this.productForm.controls.description.setValue(result.description ?? "");
+      return;
+    }
+
+    // Plain description text token - append live as it streams in.
+    this.productForm.controls.description.setValue(
+      this.productForm.controls.description.value + data
+    );
+  }
+
+  useSuggestedTitle(): void {
+    const suggestions = this.aiSuggestions();
+    if (suggestions?.title) {
+      this.productForm.controls.name.setValue(suggestions.title);
+    }
+  }
+
+  dismissAiSuggestions(): void {
+    this.aiSuggestions.set(null);
   }
 
   // --- Image management ---

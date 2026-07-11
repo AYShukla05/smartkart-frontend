@@ -84,7 +84,187 @@
           }
         </div>
 
-        <!-- Description -->
+        <!-- AI Description Assistant (self-contained tool, separate from the form field it fills) -->
+        <div
+          class="p-3"
+          style="
+            background: var(--color-bg-secondary);
+            border-left: 3px solid var(--color-primary);
+            border-radius: var(--radius-md);
+          "
+        >
+          <div class="flex items-center gap-1.5 mb-2">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="color: var(--color-primary)">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" />
+            </svg>
+            <span class="text-sm font-semibold" style="color: var(--color-text)">
+              AI Description Assistant
+            </span>
+          </div>
+
+          <label
+            for="ai-additional-details"
+            class="block text-xs mb-1"
+            style="color: var(--color-text-secondary)"
+          >
+            Anything to mention? (optional: materials, warranty, target keywords)
+          </label>
+          <textarea
+            id="ai-additional-details"
+            [formControl]="aiAdditionalDetails"
+            rows="2"
+            maxlength="500"
+            class="w-full px-3 py-1.5 mb-2 text-sm transition-all focus:ring-2 focus:ring-offset-1"
+            style="
+              border: 1px solid var(--color-border);
+              border-radius: var(--radius-md);
+              outline: none;
+              --tw-ring-color: var(--color-primary);
+              background: var(--color-bg);
+            "
+            placeholder="e.g. waterproof, 2-year warranty, aluminum frame"
+          ></textarea>
+
+          <button
+            type="button"
+            (click)="generateDescription()"
+            [disabled]="isGeneratingDescription()"
+            class="text-sm font-medium transition-all cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1.5"
+            style="color: var(--color-primary)"
+          >
+            @if (isGeneratingDescription()) {
+            <svg class="w-3.5 h-3.5 animate-spin" fill="none" viewBox="0 0 24 24">
+              <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+              <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+            </svg>
+            Generating...
+            } @else {
+            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" />
+            </svg>
+            Generate description with AI
+            }
+          </button>
+
+          <!-- AI generation error -->
+          @if (aiGenerationError()) {
+          <p class="mt-2 text-sm" style="color: var(--color-danger)">
+            {{ aiGenerationError() }}
+          </p>
+          }
+
+          <!-- Extra suggestions from the same generation (title alt, highlights, keywords) -
+               optional add-ons, distinct from the description itself which is handled by the
+               Undo/Redo banner below. Hide/Show never lose the data; only Discard does. -->
+          @if (aiSuggestions(); as suggestions) {
+            @if (suggestionsVisible()) {
+            <div
+              class="mt-3 p-3 text-sm"
+              style="
+                background: var(--color-bg);
+                border-radius: var(--radius-md);
+              "
+            >
+              <div class="flex items-center justify-between mb-1">
+                <span class="font-medium" style="color: var(--color-text)">Also suggested</span>
+                <div class="flex gap-3 flex-shrink-0">
+                  <button
+                    type="button"
+                    (click)="hideSuggestions()"
+                    class="text-xs cursor-pointer hover:opacity-80"
+                    style="color: var(--color-text-secondary)"
+                  >
+                    Hide
+                  </button>
+                  <button
+                    type="button"
+                    (click)="discardSuggestions()"
+                    class="text-xs cursor-pointer hover:opacity-80"
+                    style="color: var(--color-danger)"
+                  >
+                    Discard
+                  </button>
+                </div>
+              </div>
+              <p class="text-xs mb-2" style="color: var(--color-text-secondary)">
+                Optional extras from the same AI generation. The description field below is
+                already filled in separately.
+              </p>
+
+              <div class="mb-2">
+                <span style="color: var(--color-text-secondary)">Alternate title: </span>
+                <span style="color: var(--color-text)">{{ suggestions.title }}</span>
+                <button
+                  type="button"
+                  (click)="useSuggestedTitle()"
+                  class="ml-2 text-xs font-medium cursor-pointer hover:opacity-80"
+                  style="color: var(--color-primary)"
+                >
+                  Use as name
+                </button>
+              </div>
+
+              @if (suggestions.bullets.length > 0) {
+              <div class="mb-2">
+                <span style="color: var(--color-text-secondary)">Key selling points:</span>
+                <ul class="list-disc list-inside" style="color: var(--color-text)">
+                  @for (bullet of suggestions.bullets; track bullet) {
+                  <li>{{ bullet }}</li>
+                  }
+                </ul>
+              </div>
+              }
+
+              @if (suggestions.seoKeywords.length > 0) {
+              <div>
+                <span style="color: var(--color-text-secondary)">Suggested search keywords:</span>
+                <div class="flex flex-wrap gap-1.5 mt-1">
+                  @for (keyword of suggestions.seoKeywords; track keyword) {
+                  <span
+                    class="px-2 py-0.5 text-xs"
+                    style="
+                      background: var(--color-bg-secondary);
+                      color: var(--color-text-secondary);
+                      border-radius: var(--radius-sm);
+                    "
+                  >
+                    {{ keyword }}
+                  </span>
+                  }
+                </div>
+              </div>
+              }
+            </div>
+            } @else {
+            <div
+              class="mt-3 flex items-center justify-between px-3 py-2 text-sm"
+              style="background: var(--color-bg); border-radius: var(--radius-md)"
+            >
+              <span style="color: var(--color-text-secondary)">AI suggestions hidden</span>
+              <div class="flex gap-3 flex-shrink-0">
+                <button
+                  type="button"
+                  (click)="showSuggestions()"
+                  class="text-xs font-medium cursor-pointer hover:opacity-80"
+                  style="color: var(--color-primary)"
+                >
+                  Show
+                </button>
+                <button
+                  type="button"
+                  (click)="discardSuggestions()"
+                  class="text-xs cursor-pointer hover:opacity-80"
+                  style="color: var(--color-danger)"
+                >
+                  Discard
+                </button>
+              </div>
+            </div>
+            }
+          }
+        </div>
+
+        <!-- Description (the actual product field - unchanged from before this feature existed) -->
         <div>
           <label
             for="description"
@@ -93,6 +273,62 @@
           >
             Description
           </label>
+
+          <!-- Undo/Redo/Discard banner - shown whenever this generation's description is
+               available to switch between (either version), until explicitly discarded. -->
+          @if (aiDescription() !== null && !isGeneratingDescription()) {
+          <div
+            class="flex items-center justify-between gap-3 mb-2 px-3 py-2 text-sm"
+            style="background: var(--color-primary-light); border-radius: var(--radius-md)"
+          >
+            <span style="color: var(--color-text)">
+              {{ showingAiDescription() ? "Showing the AI-written description." : "Showing your original description." }}
+            </span>
+            <div class="flex gap-2 flex-shrink-0">
+              <button
+                type="button"
+                (click)="undoAiDescription()"
+                [disabled]="!showingAiDescription()"
+                class="px-3 py-1 text-xs font-medium cursor-pointer transition-all hover:opacity-80 disabled:opacity-40 disabled:cursor-not-allowed"
+                style="
+                  background: var(--color-bg);
+                  color: var(--color-text);
+                  border: 1px solid var(--color-border);
+                  border-radius: var(--radius-sm);
+                "
+              >
+                Undo
+              </button>
+              <button
+                type="button"
+                (click)="redoAiDescription()"
+                [disabled]="showingAiDescription()"
+                class="px-3 py-1 text-xs font-medium cursor-pointer transition-all hover:opacity-80 disabled:opacity-40 disabled:cursor-not-allowed"
+                style="
+                  background: var(--color-bg);
+                  color: var(--color-text);
+                  border: 1px solid var(--color-border);
+                  border-radius: var(--radius-sm);
+                "
+              >
+                Redo
+              </button>
+              <button
+                type="button"
+                (click)="discardAiDescription()"
+                class="px-3 py-1 text-xs font-medium cursor-pointer transition-all hover:opacity-90"
+                style="
+                  background: var(--color-danger-light);
+                  color: var(--color-danger);
+                  border-radius: var(--radius-sm);
+                "
+              >
+                Discard
+              </button>
+            </div>
+          </div>
+          }
+
           <textarea
             id="description"
             formControlName="description"
@@ -105,7 +341,7 @@
               outline: none;
               --tw-ring-color: var(--color-primary);
             "
-            placeholder="Product description (optional)"
+            placeholder="Product description (optional), or generate one with AI above"
           ></textarea>
         </div>
 
