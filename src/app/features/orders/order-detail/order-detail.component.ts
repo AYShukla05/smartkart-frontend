@@ -3,12 +3,12 @@ import { takeUntilDestroyed } from "@angular/core/rxjs-interop";
 import { CommonModule } from "@angular/common";
 import { ActivatedRoute, RouterLink } from "@angular/router";
 import { OrderService, Order } from "../../../core";
-import { ToastService } from "../../../shared";
+import { ToastService, AppLoaderComponent } from "../../../shared";
 
 @Component({
   selector: "app-order-detail",
   standalone: true,
-  imports: [CommonModule, RouterLink],
+  imports: [CommonModule, RouterLink, AppLoaderComponent],
   templateUrl: "./order-detail.component.html",
   changeDetection: ChangeDetectionStrategy.OnPush,
 })

@@ -2,12 +2,12 @@ import { Component, ChangeDetectionStrategy, inject, OnInit, signal } from "@ang
 import { CommonModule } from "@angular/common";
 import { RouterLink } from "@angular/router";
 import { OrderService, Order } from "../../../core";
-import { PaginationComponent, ToastService } from "../../../shared";
+import { PaginationComponent, ToastService, AppLoaderComponent } from "../../../shared";
 
 @Component({
   selector: "app-order-history",
   standalone: true,
-  imports: [CommonModule, RouterLink, PaginationComponent],
+  imports: [CommonModule, RouterLink, PaginationComponent, AppLoaderComponent],
   templateUrl: "./order-history.component.html",
   styleUrl: "./order-history.component.scss",
   changeDetection: ChangeDetectionStrategy.OnPush,

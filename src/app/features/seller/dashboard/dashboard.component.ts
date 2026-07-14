@@ -3,7 +3,7 @@ import { CommonModule } from "@angular/common";
 import { RouterLink } from "@angular/router";
 import { forkJoin } from "rxjs";
 import { OrderService, SellerOrder } from "../../../core";
-import { ToastService } from "../../../shared";
+import { ToastService, AppLoaderComponent } from "../../../shared";
 
 interface DashboardStats {
   totalProducts: number;
@@ -14,7 +14,7 @@ interface DashboardStats {
 @Component({
   selector: "app-seller-dashboard",
   standalone: true,
-  imports: [CommonModule, RouterLink],
+  imports: [CommonModule, RouterLink, AppLoaderComponent],
   templateUrl: "./dashboard.component.html",
   changeDetection: ChangeDetectionStrategy.OnPush,
 })

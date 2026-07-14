@@ -6,12 +6,23 @@ import {
   Validators,
 } from "@angular/forms";
 import { CategoryService, Category } from "../../../core";
-import { ToastService, ConfirmModalComponent, AdminNavComponent } from "../../../shared";
+import {
+  ToastService,
+  ConfirmModalComponent,
+  AdminNavComponent,
+  AppLoaderComponent,
+} from "../../../shared";
 
 @Component({
   selector: "app-category-list",
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, ConfirmModalComponent, AdminNavComponent],
+  imports: [
+    CommonModule,
+    ReactiveFormsModule,
+    ConfirmModalComponent,
+    AdminNavComponent,
+    AppLoaderComponent,
+  ],
   templateUrl: "./category-list.component.html",
   changeDetection: ChangeDetectionStrategy.OnPush,
 })

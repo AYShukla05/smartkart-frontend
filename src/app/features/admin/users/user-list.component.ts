@@ -10,12 +10,17 @@ import { CommonModule } from "@angular/common";
 import { Subject, debounceTime, distinctUntilChanged } from "rxjs";
 import { takeUntilDestroyed } from "@angular/core/rxjs-interop";
 import { UserService, AdminUser } from "../../../core";
-import { ToastService, PaginationComponent, AdminNavComponent } from "../../../shared";
+import {
+  ToastService,
+  PaginationComponent,
+  AdminNavComponent,
+  AppLoaderComponent,
+} from "../../../shared";
 
 @Component({
   selector: "app-admin-user-list",
   standalone: true,
-  imports: [CommonModule, PaginationComponent, AdminNavComponent],
+  imports: [CommonModule, PaginationComponent, AdminNavComponent, AppLoaderComponent],
   templateUrl: "./user-list.component.html",
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
