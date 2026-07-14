@@ -1,1 +1,12 @@
+@if (healthState() === 'healthy') {
 <router-outlet />
+} @else {
+<app-loader
+  [fullScreen]="true"
+  [message]="
+    healthState() === 'slow'
+      ? 'Still waking up the server - first load can take up to a minute.'
+      : 'Waking up SmartKart…'
+  "
+/>
+}

@@ -3,12 +3,12 @@ import { CommonModule } from "@angular/common";
 import { Router, RouterLink } from "@angular/router";
 import { finalize } from "rxjs";
 import { CartService, CartItem, OrderService, normalizeApiError } from "../../../core";
-import { ToastService } from "../../../shared";
+import { ToastService, AppLoaderComponent } from "../../../shared";
 
 @Component({
   selector: "app-cart-page",
   standalone: true,
-  imports: [CommonModule, RouterLink],
+  imports: [CommonModule, RouterLink, AppLoaderComponent],
   templateUrl: "./cart-page.component.html",
   styleUrl: "./cart-page.component.scss",
   changeDetection: ChangeDetectionStrategy.OnPush,

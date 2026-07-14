@@ -18,7 +18,7 @@ import {
   isValidFileSize,
   normalizeApiError,
 } from "../../../../core";
-import { ToastService, ConfirmModalComponent } from "../../../../shared";
+import { ToastService, ConfirmModalComponent, AppLoaderComponent } from "../../../../shared";
 import { environment } from "../../../../../environments/environment";
 
 interface AiDescriptionSuggestions {
@@ -30,7 +30,7 @@ interface AiDescriptionSuggestions {
 @Component({
   selector: "app-product-form",
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, RouterLink, ConfirmModalComponent],
+  imports: [CommonModule, ReactiveFormsModule, RouterLink, ConfirmModalComponent, AppLoaderComponent],
   templateUrl: "./product-form.component.html",
   styleUrl: "./product-form.component.scss",
   changeDetection: ChangeDetectionStrategy.OnPush,

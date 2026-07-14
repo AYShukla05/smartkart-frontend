@@ -2,12 +2,12 @@ import { Component, ChangeDetectionStrategy, inject, signal, computed, OnInit } 
 import { CommonModule, Location } from "@angular/common";
 import { ActivatedRoute, Router } from "@angular/router";
 import { ProductService, ProductDetail, CartService, CartItem, AuthService } from "../../../core";
-import { ToastService } from "../../../shared";
+import { ToastService, AppLoaderComponent } from "../../../shared";
 
 @Component({
   selector: "app-public-product-detail",
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, AppLoaderComponent],
   templateUrl: "./product-detail.component.html",
   styleUrl: "./product-detail.component.scss",
   changeDetection: ChangeDetectionStrategy.OnPush,

@@ -90,13 +90,7 @@
       </div>
 
       @if (isLoading()) {
-      <div class="p-6 text-center" style="color: var(--color-text-secondary)">
-        <svg class="w-6 h-6 animate-spin mx-auto mb-2" fill="none" viewBox="0 0 24 24" style="color: var(--color-primary)">
-          <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-          <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-        </svg>
-        Loading products...
-      </div>
+      <app-loader message="Loading products..." />
       } @else if (products().length === 0) {
       <div class="p-8 text-center">
         <svg class="w-12 h-12 mx-auto mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="color: var(--color-text-muted)">
@@ -121,6 +115,7 @@
         <thead>
           <tr style="border-bottom: 1px solid var(--color-border)">
             <th class="text-left px-6 py-3 text-sm font-medium" style="color: var(--color-text-secondary); background: var(--color-bg-secondary)">Name</th>
+            <th class="text-left px-6 py-3 text-sm font-medium" style="color: var(--color-text-secondary); background: var(--color-bg-secondary)">Description</th>
             <th class="text-left px-6 py-3 text-sm font-medium" style="color: var(--color-text-secondary); background: var(--color-bg-secondary)">Category</th>
             <th class="text-right px-6 py-3 text-sm font-medium" style="color: var(--color-text-secondary); background: var(--color-bg-secondary)">Price</th>
             <th class="text-right px-6 py-3 text-sm font-medium" style="color: var(--color-text-secondary); background: var(--color-bg-secondary)">Stock</th>
@@ -133,6 +128,15 @@
           <tr class="product-row" style="border-bottom: 1px solid var(--color-border)">
             <td class="px-6 py-4" style="color: var(--color-text)">
               <span class="font-medium">{{ product.name }}</span>
+            </td>
+            <td class="px-6 py-4 max-w-xs">
+              @if (product.description) {
+              <span class="truncate block" style="color: var(--color-text-secondary)" [title]="product.description">
+                {{ product.description }}
+              </span>
+              } @else {
+              <span class="text-sm italic" style="color: var(--color-text-muted)">No description</span>
+              }
             </td>
             <td class="px-6 py-4">
               <span

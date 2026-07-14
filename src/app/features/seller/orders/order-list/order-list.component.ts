@@ -1,12 +1,12 @@
 import { Component, ChangeDetectionStrategy, inject, OnInit, signal } from "@angular/core";
 import { CommonModule } from "@angular/common";
 import { OrderService, SellerOrder } from "../../../../core";
-import { ToastService, PaginationComponent } from "../../../../shared";
+import { ToastService, PaginationComponent, AppLoaderComponent } from "../../../../shared";
 
 @Component({
   selector: "app-seller-order-list",
   standalone: true,
-  imports: [CommonModule, PaginationComponent],
+  imports: [CommonModule, PaginationComponent, AppLoaderComponent],
   templateUrl: "./order-list.component.html",
   styleUrl: "./order-list.component.scss",
   changeDetection: ChangeDetectionStrategy.OnPush,

@@ -4,12 +4,17 @@ import { RouterLink } from "@angular/router";
 import { Subject, debounceTime, distinctUntilChanged } from "rxjs";
 import { takeUntilDestroyed } from "@angular/core/rxjs-interop";
 import { ProductService, Product } from "../../../../core";
-import { ToastService, ConfirmModalComponent, PaginationComponent } from "../../../../shared";
+import {
+  ToastService,
+  ConfirmModalComponent,
+  PaginationComponent,
+  AppLoaderComponent,
+} from "../../../../shared";
 
 @Component({
   selector: "app-product-list",
   standalone: true,
-  imports: [CommonModule, RouterLink, ConfirmModalComponent, PaginationComponent],
+  imports: [CommonModule, RouterLink, ConfirmModalComponent, PaginationComponent, AppLoaderComponent],
   templateUrl: "./product-list.component.html",
   styleUrl: "./product-list.component.scss",
   changeDetection: ChangeDetectionStrategy.OnPush,
