@@ -5,6 +5,9 @@ interface CachedProductListResult {
   key: string;
   products: Product[];
   totalCount: number;
+  isSemantic: boolean;
+  categoryRelaxed: boolean;
+  confidentCount: number;
 }
 
 /**

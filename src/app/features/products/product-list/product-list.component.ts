@@ -47,9 +47,13 @@ export class PublicProductListComponent implements OnInit {
   readonly totalCount = signal(0);
   readonly pageSize = 12; // must match backend's ProductPagination.page_size
 
+  readonly isSemantic = signal(false);
+  readonly categoryRelaxed = signal(false);
+  readonly confidentCount = signal(0);
+
   private readonly searchSubject = new Subject<string>();
 
-  readonly orderingOptions = [
+  private readonly baseOrderingOptions = [
     { value: "-created_at", label: "Newest First" },
     { value: "created_at", label: "Oldest First" },
     { value: "price", label: "Price: Low to High" },
@@ -58,14 +62,40 @@ export class PublicProductListComponent implements OnInit {
     { value: "-name", label: "Name: Z to A" },
   ];
 
+  // "Most Relevant" only means anything once there's a query to be relevant
+  // to, so it's only offered while a search is active.
+  readonly orderingOptions = () =>
+    this.searchQuery().trim()
+      ? [{ value: "relevance", label: "Most Relevant" }, ...this.baseOrderingOptions]
+      : this.baseOrderingOptions;
+
   readonly hasActiveFilters = () =>
     this.searchQuery().trim() !== "" || this.selectedCategoryId() !== null;
+
+  readonly selectedCategoryName = () =>
+    this.categories().find((c) => c.id === this.selectedCategoryId())?.name ?? "this category";
+
+  // confidentCount counts from the start of the full (unpaginated) semantic
+  // ranking, so it has to be offset by how far into that ranking this page
+  // starts - clamped to this page's own bounds so it's always a valid slice
+  // index. Outside a semantic search, confidentCount defaults to 0 same as a
+  // fully-unconfident search would, so isSemantic must gate this directly -
+  // returning the full length here means "no split" for a plain browse.
+  readonly splitIndex = () => {
+    if (!this.isSemantic()) return this.products().length;
+    const offset = (this.currentPage() - 1) * this.pageSize;
+    return Math.max(0, Math.min(this.confidentCount() - offset, this.products().length));
+  };
 
   ngOnInit(): void {
     this.searchSubject
       .pipe(debounceTime(300), distinctUntilChanged(), takeUntilDestroyed(this.destroyRef))
       .subscribe((query) => {
         this.searchQuery.set(query);
+        // A new query supersedes whatever sort the buyer picked for the
+        // previous one - relevance for a fresh search, newest-first once
+        // they clear back to a plain browse.
+        this.selectedOrdering.set(query.trim() ? "relevance" : "-created_at");
         this.currentPage.set(1);
         this.loadProducts();
         this.updateUrl();
@@ -83,6 +113,7 @@ export class PublicProductListComponent implements OnInit {
     const searchParam = params.get("search");
     if (searchParam) {
       this.searchQuery.set(searchParam);
+      this.selectedOrdering.set("relevance");
     }
     const orderingParam = params.get("ordering");
     if (orderingParam) {
@@ -100,6 +131,9 @@ export class PublicProductListComponent implements OnInit {
     if (cached) {
       this.products.set(cached.products);
       this.totalCount.set(cached.totalCount);
+      this.isSemantic.set(cached.isSemantic);
+      this.categoryRelaxed.set(cached.categoryRelaxed);
+      this.confidentCount.set(cached.confidentCount);
       this.isLoading.set(false);
     } else {
       this.loadProducts();
@@ -123,7 +157,7 @@ export class PublicProductListComponent implements OnInit {
     if (catId !== null) queryParams["category"] = catId;
 
     const ordering = this.selectedOrdering();
-    if (ordering !== "-created_at") {
+    if (ordering !== "-created_at" && ordering !== "relevance") {
       queryParams["ordering"] = ordering;
     }
 
@@ -152,8 +186,13 @@ export class PublicProductListComponent implements OnInit {
       ordering?: string;
     } = {
       page: this.currentPage(),
-      ordering: this.selectedOrdering(),
     };
+
+    const ordering = this.selectedOrdering();
+    // "relevance" isn't a real backend ordering value - omitting it lets the
+    // view keep its own distance ordering for semantic results instead of
+    // forcing "-created_at" onto them.
+    if (ordering !== "relevance") params.ordering = ordering;
 
     const search = this.searchQuery().trim();
     if (search) params.search = search;
@@ -180,11 +219,17 @@ export class PublicProductListComponent implements OnInit {
       next: (response) => {
         this.products.set(response.results);
         this.totalCount.set(response.count);
+        this.isSemantic.set(response.is_semantic);
+        this.categoryRelaxed.set(response.category_relaxed);
+        this.confidentCount.set(response.confident_count);
         this.isLoading.set(false);
         this.listState.set({
           key,
           products: response.results,
           totalCount: response.count,
+          isSemantic: response.is_semantic,
+          categoryRelaxed: response.category_relaxed,
+          confidentCount: response.confident_count,
         });
       },
       error: () => {

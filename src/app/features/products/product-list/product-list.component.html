@@ -48,7 +48,7 @@
         (change)="onOrderingChange($event)"
         style="background: var(--color-bg)"
       >
-        @for (opt of orderingOptions; track opt.value) {
+        @for (opt of orderingOptions(); track opt.value) {
         <option [value]="opt.value">{{ opt.label }}</option>
         }
       </select>
@@ -124,9 +124,10 @@
       }
     </div>
     } @else {
-    <!-- Product Grid -->
-    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-      @for (product of products(); track product.id) {
+    <!-- Shared card markup, rendered into separate grid containers below so a
+         col-span-full notice between them never triggers CSS grid's sparse
+         packing (which would otherwise leave gaps instead of reflowing). -->
+    <ng-template #productCard let-product>
       <a
         [routerLink]="['/products', product.id]"
         class="product-card block overflow-hidden"
@@ -204,11 +205,62 @@
           </p>
         </div>
       </a>
+    </ng-template>
+
+    @if (categoryRelaxed()) {
+    <!-- Category-relaxed results ignore the buyer's chosen category entirely,
+         so the whole page gets one notice up front rather than a mid-grid split. -->
+    <div
+      class="mb-4 px-4 py-2 text-sm font-medium"
+      style="
+        background: var(--color-warning-light);
+        color: var(--color-warning);
+        border-radius: var(--radius-md);
+      "
+    >
+      No matches for "{{ searchQuery() }}" in {{ selectedCategoryName() }} - showing related items from other categories instead
+    </div>
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+      @for (product of products(); track product.id) {
+      <ng-container [ngTemplateOutlet]="productCard" [ngTemplateOutletContext]="{ $implicit: product }" />
       }
     </div>
+    } @else {
+    @if (splitIndex() > 0) {
+    <div
+      class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6"
+      [class.mb-6]="splitIndex() < products().length"
+    >
+      @for (product of products().slice(0, splitIndex()); track product.id) {
+      <ng-container [ngTemplateOutlet]="productCard" [ngTemplateOutletContext]="{ $implicit: product }" />
+      }
+    </div>
+    }
+    @if (splitIndex() < products().length) {
+    <div
+      class="mb-4 px-4 py-2 text-sm font-medium"
+      style="
+        background: var(--color-warning-light);
+        color: var(--color-warning);
+        border-radius: var(--radius-md);
+      "
+    >
+      @if (splitIndex() > 0) {
+      Below this point, results are related to "{{ searchQuery() }}" but aren't as strong a match
+      } @else {
+      No strong matches for "{{ searchQuery() }}" - here are some related items instead
+      }
+    </div>
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+      @for (product of products().slice(splitIndex()); track product.id) {
+      <ng-container [ngTemplateOutlet]="productCard" [ngTemplateOutletContext]="{ $implicit: product }" />
+      }
+    </div>
+    }
+    }
 
     <!-- Pagination -->
-    @if (totalCount() > pageSize) {
+    @if (products().length < totalCount()) {
     <app-pagination
       [currentPage]="currentPage()"
       [totalItems]="totalCount()"

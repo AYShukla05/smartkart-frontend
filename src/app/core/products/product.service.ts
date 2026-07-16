@@ -10,6 +10,7 @@ import {
   ProductImage,
   ProductRequest,
   PresignedUrlResponse,
+  ProductSearchResponse,
 } from "./product.models";
 
 @Injectable({
@@ -28,14 +29,14 @@ export class ProductService {
     search?: string;
     category?: number;
     ordering?: string;
-  }): Observable<PaginatedResponse<Product>> {
+  }): Observable<ProductSearchResponse> {
     const query: Record<string, string | number> = {};
     if (params?.page) query["page"] = params.page;
     if (params?.page_size) query["page_size"] = params.page_size;
     if (params?.search) query["search"] = params.search;
     if (params?.category) query["category"] = params.category;
     if (params?.ordering) query["ordering"] = params.ordering;
-    return this.api.get<PaginatedResponse<Product>>("/products/", query);
+    return this.api.get<ProductSearchResponse>("/products/", query);
   }
 
   /** Fetches a single product's full details (public, active only) */

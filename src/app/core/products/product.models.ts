@@ -1,3 +1,5 @@
+import { PaginatedResponse } from "../../shared";
+
 /** Shape returned by GET /api/products/my/ (list) */
 export interface Product {
   id: number;
@@ -57,4 +59,12 @@ export interface ProductRequest {
 export interface PresignedUrlResponse {
   upload_url: string;
   file_url: string;
+}
+
+/** Shape returned by GET /api/products/ - PaginatedResponse plus semantic search signals */
+export interface ProductSearchResponse extends PaginatedResponse<Product> {
+  is_semantic: boolean;
+  is_fallback: boolean;
+  category_relaxed: boolean;
+  confident_count: number;
 }
