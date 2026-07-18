@@ -1,0 +1,130 @@
+<div
+  class="max-w-3xl mx-auto px-4 py-6 flex flex-col"
+  style="height: calc(100vh - var(--header-height))"
+>
+  <div class="flex items-center justify-between mb-4 flex-shrink-0">
+    <div>
+      <h1 class="text-2xl font-semibold" style="color: var(--color-text)">Seller Assistant</h1>
+      <p class="text-sm mt-1" style="color: var(--color-text-secondary)">
+        Ask about your store — sales, stock, listings. Every answer is generated fresh from your live data.
+      </p>
+    </div>
+    @if (messages().length > 0) {
+    <button
+      type="button"
+      (click)="newChat()"
+      class="text-sm font-medium px-3 py-1.5 rounded-lg transition-colors cursor-pointer flex-shrink-0"
+      style="color: var(--color-text-secondary); border: 1px solid var(--color-border)"
+    >
+      New chat
+    </button>
+    }
+  </div>
+
+  <div
+    #scrollContainer
+    class="flex-1 overflow-y-auto rounded-lg mb-4"
+    style="background: var(--color-bg-secondary); border: 1px solid var(--color-border)"
+  >
+    @if (messages().length === 0) {
+    <div class="h-full flex flex-col items-center justify-center text-center px-6 py-10 gap-4">
+      <div
+        class="w-12 h-12 rounded-full flex items-center justify-center"
+        style="background: var(--color-primary-light)"
+      >
+        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="color: var(--color-primary)">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-6l-4 4v-4z" />
+        </svg>
+      </div>
+      <div>
+        <p class="font-medium" style="color: var(--color-text)">Ask me anything about your store</p>
+        <p class="text-sm mt-1 max-w-xs" style="color: var(--color-text-secondary)">
+          I can check your sales, stock levels, generate descriptions, and find similar listings.
+        </p>
+      </div>
+      <div class="flex flex-wrap gap-2 justify-center">
+        @for (example of exampleQuestions; track example) {
+        <button
+          type="button"
+          (click)="useExample(example)"
+          class="text-sm px-3 py-1.5 rounded-full transition-colors cursor-pointer"
+          style="background: var(--color-bg); border: 1px solid var(--color-border); color: var(--color-text-secondary)"
+        >
+          {{ example }}
+        </button>
+        }
+      </div>
+    </div>
+    } @else {
+    <div class="flex flex-col gap-3 px-3 py-4">
+      @for (message of messages(); track $index) {
+      <div class="flex" [class.justify-end]="message.role === 'question'">
+        @if (message.role === 'question') {
+        <div
+          class="max-w-[80%] px-4 py-2.5 text-sm whitespace-pre-wrap rounded-2xl rounded-br-sm"
+          style="background: var(--color-primary); color: var(--color-text-inverse)"
+        >
+          {{ message.text }}
+        </div>
+        } @else if (message.role === 'answer') {
+        <div
+          class="max-w-[80%] px-4 py-2.5 text-sm whitespace-pre-wrap rounded-2xl rounded-bl-sm"
+          style="background: var(--color-bg); color: var(--color-text); border: 1px solid var(--color-border)"
+        >
+          {{ message.text }}
+        </div>
+        } @else {
+        <div
+          class="max-w-[80%] px-4 py-2.5 text-sm whitespace-pre-wrap rounded-2xl rounded-bl-sm"
+          style="background: var(--color-danger-light); color: var(--color-danger); border: 1px solid var(--color-danger)"
+        >
+          {{ message.text }}
+        </div>
+        }
+      </div>
+      }
+      @if (isLoading()) {
+      <div class="flex">
+        <div
+          class="px-4 py-3 rounded-2xl rounded-bl-sm flex gap-1 items-center"
+          style="background: var(--color-bg); border: 1px solid var(--color-border)"
+        >
+          <span class="w-1.5 h-1.5 rounded-full animate-bounce" style="background: var(--color-text-muted)"></span>
+          <span class="w-1.5 h-1.5 rounded-full animate-bounce" style="background: var(--color-text-muted); animation-delay: 150ms"></span>
+          <span class="w-1.5 h-1.5 rounded-full animate-bounce" style="background: var(--color-text-muted); animation-delay: 300ms"></span>
+        </div>
+      </div>
+      }
+    </div>
+    }
+  </div>
+
+  <form (ngSubmit)="ask()" class="flex items-end gap-2 flex-shrink-0">
+    <textarea
+      [value]="question()"
+      (input)="onQuestionInput($event)"
+      (keydown)="onKeydown($event)"
+      [disabled]="isLoading()"
+      rows="2"
+      placeholder="Ask about your sales, stock, or listings..."
+      class="flex-1 resize-none px-3 py-2.5 text-sm rounded-lg focus:outline-none disabled:opacity-60"
+      style="background: var(--color-bg); border: 1px solid var(--color-border); color: var(--color-text)"
+    ></textarea>
+    <button
+      type="submit"
+      [disabled]="isLoading() || !question().trim()"
+      class="px-4 py-2.5 rounded-lg text-sm font-medium flex items-center gap-1.5 transition-colors disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer flex-shrink-0"
+      style="background: var(--color-primary); color: var(--color-text-inverse)"
+    >
+      @if (isLoading()) {
+      <svg class="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
+        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+      </svg>
+      Thinking...
+      } @else {
+      Ask
+      }
+    </button>
+  </form>
+</div>

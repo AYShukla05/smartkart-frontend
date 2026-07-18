@@ -139,6 +139,14 @@ export const routes: Routes = [
             "./features/seller/orders/order-list/order-list.component"
           ).then((m) => m.SellerOrderListComponent),
       },
+      {
+        path: "assistant",
+        title: "Seller Assistant - SmartKart Seller",
+        loadComponent: () =>
+          import(
+            "./features/seller/assistant/assistant.component"
+          ).then((m) => m.SellerAssistantComponent),
+      },
     ],
   },
 

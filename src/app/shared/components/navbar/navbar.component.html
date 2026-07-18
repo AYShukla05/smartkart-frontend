@@ -65,6 +65,13 @@
     >
       Orders
     </a>
+    <a
+      routerLink="/seller/assistant"
+      routerLinkActive="active"
+      class="nav-link"
+    >
+      Assistant
+    </a>
     }
     @if (auth.isAdmin()) {
     <a
@@ -244,6 +251,9 @@
     </a>
     <a routerLink="/seller/orders" routerLinkActive="active" class="mobile-nav-link">
       Orders
+    </a>
+    <a routerLink="/seller/assistant" routerLinkActive="active" class="mobile-nav-link">
+      Assistant
     </a>
     }
     @if (auth.isAdmin()) {
