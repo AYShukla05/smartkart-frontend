@@ -8,7 +8,7 @@ import {
 } from "@angular/core";
 import { CommonModule } from "@angular/common";
 import { FormsModule } from "@angular/forms";
-import { SellerAssistantService, normalizeApiError } from "../../../core";
+import { SellerAssistantService, normalizeApiError, renderAssistantMarkdown } from "../../../core";
 
 export type AssistantMessageRole = "question" | "answer" | "error";
 
@@ -28,6 +28,7 @@ const EXAMPLE_QUESTIONS = [
   standalone: true,
   imports: [CommonModule, FormsModule],
   templateUrl: "./assistant.component.html",
+  styleUrl: "./assistant.component.scss",
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class SellerAssistantComponent {
@@ -53,6 +54,10 @@ export class SellerAssistantComponent {
 
   useExample(example: string): void {
     this.question.set(example);
+  }
+
+  renderMarkdown(text: string): string {
+    return renderAssistantMarkdown(text);
   }
 
   ask(): void {
