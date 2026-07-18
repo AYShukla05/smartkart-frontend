@@ -32,6 +32,19 @@ The app handles JWT authentication with automatic token refresh, role-based rout
 
 ---
 
+## AI Features
+
+**AI-Assisted Description Generator** - a full listing in seconds, live in the seller's own form.
+- Title, description, bullets, and SEO keywords streamed straight into the textarea as the model writes them (Server-Sent Events over `fetch`, since the request is a POST)
+- Undo, redo, and discard switch instantly between original and generated text - entirely client-side, no extra API calls
+
+**Semantic Search with Confidence-Aware Results** - surfaces the right products from an everyday description, then shows buyers exactly how confident each match really is.
+- "protect my phone screen from cracking" surfaces the right screen-protector products despite not sharing a single word with them
+- Confident and weaker "related" matches render as two visually distinct groups, not one undifferentiated list
+- A padded fallback set (used when too few results are confident) shows in full on one page instead of paginated - splitting a small fixed-size set serves no purpose
+
+---
+
 ## Tech Stack
 
 | Layer | Technology | Why This Choice |
