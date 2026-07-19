@@ -8,14 +8,26 @@ import {
 } from "@angular/core";
 import { CommonModule } from "@angular/common";
 import { FormsModule } from "@angular/forms";
-import { SellerAssistantService, normalizeApiError, renderAssistantMarkdown } from "../../../core";
+import {
+  PendingAction,
+  SellerAssistantService,
+  normalizeApiError,
+  renderAssistantMarkdown,
+} from "../../../core";
 
 export type AssistantMessageRole = "question" | "answer" | "error";
+export type PendingActionStatus = "pending" | "confirming" | "confirmed" | "cancelled" | "error";
 
 export interface AssistantMessage {
+  id: number;
   role: AssistantMessageRole;
   text: string;
+  pendingAction?: PendingAction;
+  pendingActionStatus?: PendingActionStatus;
+  pendingActionError?: string;
 }
+
+let nextMessageId = 0;
 
 const EXAMPLE_QUESTIONS = [
   "Which of my products are running low on stock?",
@@ -64,29 +76,67 @@ export class SellerAssistantComponent {
     const question = this.question().trim();
     if (!question || this.isLoading()) return;
 
-    this.messages.update((msgs) => [...msgs, { role: "question", text: question }]);
+    this.messages.update((msgs) => [...msgs, { id: nextMessageId++, role: "question", text: question }]);
     this.question.set("");
     this.isLoading.set(true);
     this.scrollToBottom();
 
     this.assistantService.ask(question).subscribe({
-      next: ({ response }) => {
-        this.messages.update((msgs) => [...msgs, { role: "answer", text: response }]);
+      next: ({ response, pending_action }) => {
+        this.messages.update((msgs) => [
+          ...msgs,
+          {
+            id: nextMessageId++,
+            role: "answer",
+            text: response,
+            pendingAction: pending_action ?? undefined,
+            pendingActionStatus: pending_action ? "pending" : undefined,
+          },
+        ]);
         this.isLoading.set(false);
         this.scrollToBottom();
       },
       error: (err) => {
         const message = normalizeApiError(err).message;
-        this.messages.update((msgs) => [...msgs, { role: "error", text: message }]);
+        this.messages.update((msgs) => [...msgs, { id: nextMessageId++, role: "error", text: message }]);
         this.isLoading.set(false);
         this.scrollToBottom();
       },
     });
   }
 
+  confirmPendingAction(message: AssistantMessage): void {
+    if (!message.pendingAction || message.pendingActionStatus === "confirming") return;
+    const pendingAction = message.pendingAction;
+    this.updateMessage(message, { pendingActionStatus: "confirming" });
+
+    this.assistantService.confirmAction(pendingAction).subscribe({
+      next: (result) => {
+        this.updateMessage(message, { pendingActionStatus: "confirmed" });
+        this.messages.update((msgs) => [
+          ...msgs,
+          { id: nextMessageId++, role: "answer", text: `Done — ${result.product_name}'s ${result.field} is now ${result.new_value}.` },
+        ]);
+        this.scrollToBottom();
+      },
+      error: (err) => {
+        const errorMessage = normalizeApiError(err).message;
+        this.updateMessage(message, { pendingActionStatus: "error", pendingActionError: errorMessage });
+      },
+    });
+  }
+
+  cancelPendingAction(message: AssistantMessage): void {
+    this.updateMessage(message, { pendingActionStatus: "cancelled" });
+  }
+
   newChat(): void {
     this.messages.set([]);
     this.question.set("");
+  }
+
+  private updateMessage(target: AssistantMessage, changes: Partial<AssistantMessage>): void {
+    this.messages.update((msgs) => msgs.map((m) => (m.id === target.id ? { ...m, ...changes } : m)));
   }
 
   private scrollToBottom(): void {

@@ -67,11 +67,75 @@
           {{ message.text }}
         </div>
         } @else if (message.role === 'answer') {
-        <div
-          class="markdown-content max-w-[80%] px-4 py-2.5 text-sm rounded-2xl rounded-bl-sm"
-          style="background: var(--color-bg); color: var(--color-text); border: 1px solid var(--color-border)"
-          [innerHTML]="renderMarkdown(message.text)"
-        ></div>
+        <div class="flex flex-col gap-2 max-w-[80%]">
+          <div
+            class="markdown-content px-4 py-2.5 text-sm rounded-2xl rounded-bl-sm"
+            style="background: var(--color-bg); color: var(--color-text); border: 1px solid var(--color-border)"
+            [innerHTML]="renderMarkdown(message.text)"
+          ></div>
+          @if (message.pendingAction) {
+          <div
+            class="px-4 py-3 rounded-lg text-sm"
+            style="background: var(--color-primary-light); border: 1px solid var(--color-primary)"
+          >
+            <p class="mb-2" style="color: var(--color-text)">
+              Update <strong>{{ message.pendingAction.product_name }}</strong>'s {{ message.pendingAction.field }}
+              from <strong>{{ message.pendingAction.current_value }}</strong> to
+              <strong>{{ message.pendingAction.new_value }}</strong>?
+            </p>
+            @switch (message.pendingActionStatus) {
+            @case ('pending') {
+            <div class="flex gap-2">
+              <button
+                type="button"
+                (click)="confirmPendingAction(message)"
+                class="px-3 py-1.5 rounded-md text-sm font-medium cursor-pointer transition-colors"
+                style="background: var(--color-primary); color: var(--color-text-inverse)"
+              >
+                Confirm
+              </button>
+              <button
+                type="button"
+                (click)="cancelPendingAction(message)"
+                class="px-3 py-1.5 rounded-md text-sm font-medium cursor-pointer transition-colors"
+                style="background: var(--color-bg); color: var(--color-text-secondary); border: 1px solid var(--color-border)"
+              >
+                Cancel
+              </button>
+            </div>
+            }
+            @case ('confirming') {
+            <div class="flex items-center gap-2 text-sm" style="color: var(--color-text-secondary)">
+              <svg class="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
+                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+              </svg>
+              Applying...
+            </div>
+            }
+            @case ('confirmed') {
+            <p class="text-sm font-medium" style="color: var(--color-success)">✓ Confirmed</p>
+            }
+            @case ('cancelled') {
+            <p class="text-sm" style="color: var(--color-text-muted)">Cancelled</p>
+            }
+            @case ('error') {
+            <div>
+              <p class="text-sm mb-2" style="color: var(--color-danger)">{{ message.pendingActionError }}</p>
+              <button
+                type="button"
+                (click)="confirmPendingAction(message)"
+                class="px-3 py-1.5 rounded-md text-sm font-medium cursor-pointer transition-colors"
+                style="background: var(--color-primary); color: var(--color-text-inverse)"
+              >
+                Retry
+              </button>
+            </div>
+            }
+            }
+          </div>
+          }
+        </div>
         } @else {
         <div
           class="markdown-content max-w-[80%] px-4 py-2.5 text-sm rounded-2xl rounded-bl-sm"
