@@ -32,6 +32,7 @@ let nextMessageId = 0;
 const EXAMPLE_QUESTIONS = [
   "Which of my products are running low on stock?",
   "What were my total sales this month?",
+  "Which category sells best for me?",
   "Find products similar to wireless earbuds",
 ];
 
@@ -113,9 +114,13 @@ export class SellerAssistantComponent {
     this.assistantService.confirmAction(pendingAction).subscribe({
       next: (result) => {
         this.updateMessage(message, { pendingActionStatus: "confirmed" });
+        const text =
+          pendingAction.action === "create_product"
+            ? `Done — **${result.product_name}** has been added to your store.`
+            : `Done — ${result.product_name}'s ${result.field} is now ${result.new_value}.`;
         this.messages.update((msgs) => [
           ...msgs,
-          { id: nextMessageId++, role: "answer", text: `Done — ${result.product_name}'s ${result.field} is now ${result.new_value}.` },
+          { id: nextMessageId++, role: "answer", text },
         ]);
         this.scrollToBottom();
       },
