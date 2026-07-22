@@ -18,16 +18,22 @@ import {
 export type AssistantMessageRole = "question" | "answer" | "error";
 export type PendingActionStatus = "pending" | "confirming" | "confirmed" | "cancelled" | "error";
 
+export interface PendingActionEntry {
+  id: number;
+  action: PendingAction;
+  status: PendingActionStatus;
+  error?: string;
+}
+
 export interface AssistantMessage {
   id: number;
   role: AssistantMessageRole;
   text: string;
-  pendingAction?: PendingAction;
-  pendingActionStatus?: PendingActionStatus;
-  pendingActionError?: string;
+  pendingActions?: PendingActionEntry[];
 }
 
 let nextMessageId = 0;
+let nextActionEntryId = 0;
 
 const EXAMPLE_QUESTIONS = [
   "Which of my products are running low on stock?",
@@ -83,15 +89,18 @@ export class SellerAssistantComponent {
     this.scrollToBottom();
 
     this.assistantService.ask(question).subscribe({
-      next: ({ response, pending_action }) => {
+      next: ({ response, pending_actions }) => {
         this.messages.update((msgs) => [
           ...msgs,
           {
             id: nextMessageId++,
             role: "answer",
             text: response,
-            pendingAction: pending_action ?? undefined,
-            pendingActionStatus: pending_action ? "pending" : undefined,
+            pendingActions: pending_actions.map((action) => ({
+              id: nextActionEntryId++,
+              action,
+              status: "pending" as PendingActionStatus,
+            })),
           },
         ]);
         this.isLoading.set(false);
@@ -106,16 +115,15 @@ export class SellerAssistantComponent {
     });
   }
 
-  confirmPendingAction(message: AssistantMessage): void {
-    if (!message.pendingAction || message.pendingActionStatus === "confirming") return;
-    const pendingAction = message.pendingAction;
-    this.updateMessage(message, { pendingActionStatus: "confirming" });
+  confirmPendingAction(message: AssistantMessage, entry: PendingActionEntry): void {
+    if (entry.status === "confirming") return;
+    this.updateActionEntry(message, entry, { status: "confirming" });
 
-    this.assistantService.confirmAction(pendingAction).subscribe({
+    this.assistantService.confirmAction(entry.action).subscribe({
       next: (result) => {
-        this.updateMessage(message, { pendingActionStatus: "confirmed" });
+        this.updateActionEntry(message, entry, { status: "confirmed" });
         const text =
-          pendingAction.action === "create_product"
+          entry.action.action === "create_product"
             ? `Done — **${result.product_name}** has been added to your store.`
             : `Done — ${result.product_name}'s ${result.field} is now ${result.new_value}.`;
         this.messages.update((msgs) => [
@@ -126,13 +134,13 @@ export class SellerAssistantComponent {
       },
       error: (err) => {
         const errorMessage = normalizeApiError(err).message;
-        this.updateMessage(message, { pendingActionStatus: "error", pendingActionError: errorMessage });
+        this.updateActionEntry(message, entry, { status: "error", error: errorMessage });
       },
     });
   }
 
-  cancelPendingAction(message: AssistantMessage): void {
-    this.updateMessage(message, { pendingActionStatus: "cancelled" });
+  cancelPendingAction(message: AssistantMessage, entry: PendingActionEntry): void {
+    this.updateActionEntry(message, entry, { status: "cancelled" });
   }
 
   newChat(): void {
@@ -140,8 +148,20 @@ export class SellerAssistantComponent {
     this.question.set("");
   }
 
-  private updateMessage(target: AssistantMessage, changes: Partial<AssistantMessage>): void {
-    this.messages.update((msgs) => msgs.map((m) => (m.id === target.id ? { ...m, ...changes } : m)));
+  private updateActionEntry(
+    message: AssistantMessage,
+    entry: PendingActionEntry,
+    changes: Partial<PendingActionEntry>,
+  ): void {
+    this.messages.update((msgs) =>
+      msgs.map((m) => {
+        if (m.id !== message.id || !m.pendingActions) return m;
+        return {
+          ...m,
+          pendingActions: m.pendingActions.map((e) => (e.id === entry.id ? { ...e, ...changes } : e)),
+        };
+      }),
+    );
   }
 
   private scrollToBottom(): void {

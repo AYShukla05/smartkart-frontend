@@ -19,7 +19,7 @@ export interface PendingAction {
 
 export interface SellerAssistantResponse {
   response: string;
-  pending_action: PendingAction | null;
+  pending_actions: PendingAction[];
 }
 
 export interface ConfirmActionResponse {

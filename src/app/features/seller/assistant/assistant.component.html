@@ -73,28 +73,28 @@
             style="background: var(--color-bg); color: var(--color-text); border: 1px solid var(--color-border)"
             [innerHTML]="renderMarkdown(message.text)"
           ></div>
-          @if (message.pendingAction) {
+          @for (entry of message.pendingActions; track entry.id) {
           <div
             class="px-4 py-3 rounded-lg text-sm"
             style="background: var(--color-primary-light); border: 1px solid var(--color-primary)"
           >
             <p class="mb-2" style="color: var(--color-text)">
-              @if (message.pendingAction.action === 'create_product') {
-              Create new listing <strong>{{ message.pendingAction.product_name }}</strong>?
+              @if (entry.action.action === 'create_product') {
+              Create new listing <strong>{{ entry.action.product_name }}</strong>?
               <br />
-              <span style="color: var(--color-text-secondary)">{{ message.pendingAction.summary }}</span>
+              <span style="color: var(--color-text-secondary)">{{ entry.action.summary }}</span>
               } @else {
-              Update <strong>{{ message.pendingAction.product_name }}</strong>'s {{ message.pendingAction.field }}
-              from <strong>{{ message.pendingAction.current_value }}</strong> to
-              <strong>{{ message.pendingAction.new_value }}</strong>?
+              Update <strong>{{ entry.action.product_name }}</strong>'s {{ entry.action.field }}
+              from <strong>{{ entry.action.current_value }}</strong> to
+              <strong>{{ entry.action.new_value }}</strong>?
               }
             </p>
-            @switch (message.pendingActionStatus) {
+            @switch (entry.status) {
             @case ('pending') {
             <div class="flex gap-2">
               <button
                 type="button"
-                (click)="confirmPendingAction(message)"
+                (click)="confirmPendingAction(message, entry)"
                 class="px-3 py-1.5 rounded-md text-sm font-medium cursor-pointer transition-colors"
                 style="background: var(--color-primary); color: var(--color-text-inverse)"
               >
@@ -102,7 +102,7 @@
               </button>
               <button
                 type="button"
-                (click)="cancelPendingAction(message)"
+                (click)="cancelPendingAction(message, entry)"
                 class="px-3 py-1.5 rounded-md text-sm font-medium cursor-pointer transition-colors"
                 style="background: var(--color-bg); color: var(--color-text-secondary); border: 1px solid var(--color-border)"
               >
@@ -127,10 +127,10 @@
             }
             @case ('error') {
             <div>
-              <p class="text-sm mb-2" style="color: var(--color-danger)">{{ message.pendingActionError }}</p>
+              <p class="text-sm mb-2" style="color: var(--color-danger)">{{ entry.error }}</p>
               <button
                 type="button"
-                (click)="confirmPendingAction(message)"
+                (click)="confirmPendingAction(message, entry)"
                 class="px-3 py-1.5 rounded-md text-sm font-medium cursor-pointer transition-colors"
                 style="background: var(--color-primary); color: var(--color-text-inverse)"
               >
