@@ -87,6 +87,15 @@ export const routes: Routes = [
             "./features/orders/order-history/order-history.component"
           ).then((m) => m.OrderHistoryComponent),
       },
+      {
+        path: "assistant",
+        title: "Assistant - SmartKart",
+        canActivate: [buyerGuard],
+        loadComponent: () =>
+          import("./features/assistant/assistant.component").then(
+            (m) => m.BuyerAssistantComponent
+          ),
+      },
     ],
   },
 

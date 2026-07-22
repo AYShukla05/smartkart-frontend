@@ -41,6 +41,13 @@
     >
       Orders
     </a>
+    <a
+      routerLink="/assistant"
+      routerLinkActive="active"
+      class="nav-link"
+    >
+      Assistant
+    </a>
     }
     @if (auth.isSeller()) {
     <a
@@ -240,6 +247,9 @@
     @if (auth.isBuyer()) {
     <a routerLink="/orders" routerLinkActive="active" class="mobile-nav-link">
       Orders
+    </a>
+    <a routerLink="/assistant" routerLinkActive="active" class="mobile-nav-link">
+      Assistant
     </a>
     }
     @if (auth.isSeller()) {
