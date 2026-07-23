@@ -9,6 +9,8 @@ import {
 import { CommonModule } from "@angular/common";
 import { FormsModule } from "@angular/forms";
 import {
+  ActionOutcome,
+  ConfirmActionResponse,
   PendingAction,
   SellerAssistantService,
   normalizeApiError,
@@ -23,6 +25,10 @@ export interface PendingActionEntry {
   action: PendingAction;
   status: PendingActionStatus;
   error?: string;
+  // Populated on a successful confirm - the actual applied value, since it's
+  // what get reported back to the conversation history once the whole batch
+  // resolves (see maybeRecordOutcomes).
+  result?: ConfirmActionResponse;
 }
 
 export interface AssistantMessage {
@@ -63,6 +69,12 @@ export class SellerAssistantComponent {
   // Plain component state, not a signal - starts null every page load by
   // design (see BuyerAssistantComponent: a fresh conversation per session).
   private conversationId: number | null = null;
+
+  // Tracks which assistant messages' proposal batches have already been
+  // reported to the conversation history, so a batch is recorded exactly
+  // once even though maybeRecordOutcomes is checked after every individual
+  // confirm/cancel in that batch.
+  private recordedMessageIds = new Set<number>();
 
   onQuestionInput(event: Event): void {
     this.question.set((event.target as HTMLTextAreaElement).value);
@@ -126,7 +138,7 @@ export class SellerAssistantComponent {
 
     this.assistantService.confirmAction(entry.action).subscribe({
       next: (result) => {
-        this.updateActionEntry(message, entry, { status: "confirmed" });
+        this.updateActionEntry(message, entry, { status: "confirmed", result });
         const text =
           entry.action.action === "create_product"
             ? `Done — **${result.product_name}** has been added to your store.`
@@ -136,6 +148,7 @@ export class SellerAssistantComponent {
           { id: nextMessageId++, role: "answer", text },
         ]);
         this.scrollToBottom();
+        this.maybeRecordOutcomes(message);
       },
       error: (err) => {
         const errorMessage = normalizeApiError(err).message;
@@ -146,12 +159,61 @@ export class SellerAssistantComponent {
 
   cancelPendingAction(message: AssistantMessage, entry: PendingActionEntry): void {
     this.updateActionEntry(message, entry, { status: "cancelled" });
+    this.maybeRecordOutcomes(message);
   }
 
   newChat(): void {
     this.messages.set([]);
     this.question.set("");
     this.conversationId = null;
+    this.recordedMessageIds.clear();
+  }
+
+  // Reports one turn's whole batch of proposals back to the conversation
+  // history in a single call, once every card from that turn has been
+  // confirmed or cancelled - not on each individual click. This is what
+  // stops the assistant giving stale answers later (e.g. "the price hasn't
+  // been updated yet" when it actually has): before this, confirming a
+  // proposal never told the model's own context what actually happened.
+  //
+  // If a card is left in "pending" or "error" indefinitely, this batch is
+  // never recorded - an accepted tradeoff for keeping this a single call
+  // per batch rather than a partial write per action.
+  private maybeRecordOutcomes(message: AssistantMessage): void {
+    // Read the current signal state by id, not the `message` parameter -
+    // that's a snapshot from whenever the caller's async callback started,
+    // and won't yet reflect the very updateActionEntry() call that just
+    // ran immediately before this (the entry being resolved right now would
+    // always look "still pending" otherwise, so this would never fire).
+    const current = this.messages().find((m) => m.id === message.id);
+    const entries = current?.pendingActions;
+    if (!entries || entries.length === 0) return;
+    if (this.recordedMessageIds.has(message.id)) return;
+
+    const allResolved = entries.every((e) => e.status === "confirmed" || e.status === "cancelled");
+    if (!allResolved) return;
+    if (this.conversationId === null) return;
+
+    this.recordedMessageIds.add(message.id);
+
+    const outcomes: ActionOutcome[] = entries.map((entry) =>
+      entry.status === "confirmed" && entry.result
+        ? {
+            product_name: entry.result.product_name,
+            field: entry.result.field,
+            status: "confirmed",
+            new_value: entry.result.new_value,
+          }
+        : {
+            product_name: entry.action.product_name,
+            field: entry.action.field ?? "listing",
+            status: "cancelled",
+          },
+    );
+
+    // Best-effort: if this fails, the fallback system-prompt instruction
+    // (always verify current state with a lookup tool) still catches it.
+    this.assistantService.recordActionOutcomes(this.conversationId, outcomes).subscribe({ error: () => {} });
   }
 
   private updateActionEntry(
