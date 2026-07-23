@@ -60,6 +60,10 @@ export class SellerAssistantComponent {
   readonly messages = signal<AssistantMessage[]>([]);
   readonly isLoading = signal(false);
 
+  // Plain component state, not a signal - starts null every page load by
+  // design (see BuyerAssistantComponent: a fresh conversation per session).
+  private conversationId: number | null = null;
+
   onQuestionInput(event: Event): void {
     this.question.set((event.target as HTMLTextAreaElement).value);
   }
@@ -88,8 +92,9 @@ export class SellerAssistantComponent {
     this.isLoading.set(true);
     this.scrollToBottom();
 
-    this.assistantService.ask(question).subscribe({
-      next: ({ response, pending_actions }) => {
+    this.assistantService.ask(question, this.conversationId).subscribe({
+      next: ({ response, pending_actions, conversation_id }) => {
+        this.conversationId = conversation_id;
         this.messages.update((msgs) => [
           ...msgs,
           {
@@ -146,6 +151,7 @@ export class SellerAssistantComponent {
   newChat(): void {
     this.messages.set([]);
     this.question.set("");
+    this.conversationId = null;
   }
 
   private updateActionEntry(

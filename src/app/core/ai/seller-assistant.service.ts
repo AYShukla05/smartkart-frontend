@@ -20,6 +20,7 @@ export interface PendingAction {
 export interface SellerAssistantResponse {
   response: string;
   pending_actions: PendingAction[];
+  conversation_id: number;
 }
 
 export interface ConfirmActionResponse {
@@ -34,8 +35,12 @@ export interface ConfirmActionResponse {
 export class SellerAssistantService {
   private readonly api = inject(ApiService);
 
-  ask(question: string): Observable<SellerAssistantResponse> {
-    return this.api.post<SellerAssistantResponse>("/ai/seller-assistant/", { question });
+  ask(question: string, conversationId: number | null): Observable<SellerAssistantResponse> {
+    const body: { question: string; conversation_id?: number } = { question };
+    if (conversationId !== null) {
+      body.conversation_id = conversationId;
+    }
+    return this.api.post<SellerAssistantResponse>("/ai/seller-assistant/", body);
   }
 
   confirmAction(pendingAction: PendingAction): Observable<ConfirmActionResponse> {
