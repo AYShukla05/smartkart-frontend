@@ -171,9 +171,15 @@ export class SellerAssistantComponent {
   }
 
   private scrollToBottom(): void {
-    setTimeout(() => {
-      const el = this.scrollContainer?.nativeElement;
-      if (el) el.scrollTop = el.scrollHeight;
+    // setTimeout(0) fires after the JS stack clears but not necessarily after
+    // the browser has laid out newly-added DOM (e.g. two pending-action cards
+    // from one reply) - scrollHeight can be read mid-layout and undershoot.
+    // Double rAF waits for a full paint cycle first.
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        const el = this.scrollContainer?.nativeElement;
+        if (el) el.scrollTop = el.scrollHeight;
+      });
     });
   }
 }
